@@ -1,0 +1,36 @@
+# Dependencies and generated npm output
+node_modules/
+miniprogram_npm/
+cloudfunctions/*/node_modules/
+
+# Logs and runtime output
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# WeChat DevTools local/private settings
+project.private.config.json
+.project.private.config.json
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+
+# Temporary/cache files
+tmp/
+temp/
+.cache/
+*.tmp
+*.bak
+*.swp

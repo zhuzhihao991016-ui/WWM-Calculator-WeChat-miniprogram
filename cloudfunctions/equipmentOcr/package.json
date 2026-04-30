@@ -1,0 +1,10 @@
+{
+  "name": "equipmentOcr",
+  "version": "1.0.0",
+  "description": "equipment ocr cloud function",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.1",
+    "tencentcloud-sdk-nodejs": "^4.0.0"
+  }
+}

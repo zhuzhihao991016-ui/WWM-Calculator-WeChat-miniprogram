@@ -1,0 +1,1067 @@
+<view class="container">
+  <view class="page-title">国际服全流派毕业度计算器</view>
+
+  <!-- ===== 面板页 ===== -->
+  <view wx:if="{{ui.currentTab === 'panel'}}">
+  <!-- 顶部结果：仅展示轴结果 -->
+  <view class="card result-card" wx:if="{{axisResult}}">
+    <view class="result-top">
+      <view class="result-title">轴期望总伤害</view>
+      <view class="result-number">{{axisResult.totalExpectedDamage}}</view>
+      <view class="result-sub">
+        {{axisResult.schoolName}} / {{axisResult.axisName}} / {{currentTarget.targetName}}
+      </view>
+    </view>
+
+    <view class="result-tag-list">
+      <text class="result-tag">时长：{{axisResult.duration}} 秒</text>
+      <text class="result-tag">实际秒伤：{{axisResult.dps}}</text>
+      <text class="result-tag">毕业秒伤：{{axisResult.graduateDps}}</text>
+      <text class="result-tag">毕业率：{{axisResult.graduateRate}}</text>
+    </view>
+
+    <view class="expand-btn" bindtap="toggleResultDetail">
+      {{ui.showResultDetail ? '收起轴详细结果' : '展开轴详细结果'}}
+    </view>
+
+    <view class="detail-panel" wx:if="{{ui.showResultDetail}}">
+
+      <view class="detail-title">技能伤害构成</view>
+<view class="summary-list">
+  <block wx:for="{{axisResult.skillSummaryList}}" wx:for-item="sk" wx:for-index="idx" wx:key="idx">
+    <view class="summary-item skill-summary-item">
+      <text class="summary-label skill-summary-label">{{sk.skillName}}</text>
+      <text class="summary-value skill-summary-value">{{sk.totalDamage}}（{{sk.ratio}}）</text>
+    </view>
+  </block>
+</view>
+
+<view class="detail-title" style="margin-top:16rpx;">命中类型占比</view>
+<view class="summary-list">
+  <view class="summary-item">
+    <text class="summary-label">擦伤</text>
+    <text class="summary-value">{{axisResult.hitTypeStats.glancingRate}}</text>
+  </view>
+  <view class="summary-item">
+    <text class="summary-label">普通（白字）</text>
+    <text class="summary-value">{{axisResult.hitTypeStats.normalRate}}</text>
+  </view>
+  <view class="summary-item">
+    <text class="summary-label">会心</text>
+    <text class="summary-value">{{axisResult.hitTypeStats.insightRate}}</text>
+  </view>
+  <view class="summary-item">
+    <text class="summary-label">会意</text>
+    <text class="summary-value">{{axisResult.hitTypeStats.perfectRate}}</text>
+  </view>
+</view>
+
+</view>
+  </view>
+
+  <!-- 无轴数据时提示 -->
+  <view class="card result-card" wx:elif="{{currentAxis === null}}">
+    <view class="tip">当前流派暂无轴数据，请选择其他流派</view>
+  </view>
+
+  <!-- 当前配置 -->
+  <view class="card">
+    <view class="section-title">当前配置</view>
+    <view class="summary-list">
+      <view class="summary-item">
+        <text class="summary-label">流派</text>
+        <text class="summary-value">{{currentSchool.schoolName || '未选择'}}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">轴</text>
+        <text class="summary-value">{{currentAxis ? currentAxis.axisName : '无'}}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">目标</text>
+        <text class="summary-value">{{currentTarget.targetName || '未选择'}}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">主属性</text>
+        <text class="summary-value">{{currentSchool.mainElement || '无'}}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">固定心法</text>
+        <text class="summary-value">{{currentSchool.fixedMentality || '无'}}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">已选心法</text>
+        <text class="summary-value">{{selectedMentalitiesText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 核心选择 -->
+  <view class="card">
+    <view class="section-title">核心选择</view>
+
+    <picker mode="selector" range="{{schoolOptions}}" value="{{schoolIndex}}" bindchange="handleSchoolChange">
+      <view class="picker-row">
+        <text class="picker-label">流派</text>
+        <text class="picker-value">{{schoolOptions[schoolIndex] || '请选择流派'}}</text>
+      </view>
+    </picker>
+
+    <view class="form-item">
+      <text class="label">选择轴</text>
+      <picker
+        mode="selector"
+        range="{{currentAxisList}}"
+        range-key="axisName"
+        value="{{axisIndex}}"
+        bindchange="handleAxisChange"
+      >
+        <view class="picker">
+          {{currentAxis ? currentAxis.axisName : '当前流派暂无轴'}}
+        </view>
+      </picker>
+    </view>
+
+    <picker mode="selector" range="{{targetOptions}}" value="{{targetIndex}}" bindchange="handleTargetChange">
+      <view class="picker-row no-border">
+        <text class="picker-label">目标</text>
+        <text class="picker-value">{{targetOptions[targetIndex] || '请选择目标'}}</text>
+      </view>
+    </picker>
+    <picker mode="selector" range="{{setOptions}}" value="{{setIndex}}" bindchange="handleSetChange">
+      <view class="picker-row no-border">
+        <text class="picker-label">套装</text>
+        <text class="picker-value">{{selectedSet || '无'}}</text>
+      </view>
+    </picker>
+    <picker mode="selector" range="{{tiangongOptions}}" value="{{tiangongIndex}}" bindchange="handleTiangongChange">
+      <view class="picker-row">
+        <text class="picker-label">天工</text>
+        <text class="picker-value">{{tiangongOptions[tiangongIndex] || '无'}}</text>
+      </view>
+    </picker>
+
+    <picker mode="selector" range="{{foodOptions}}" value="{{foodIndex}}" bindchange="handleFoodChange">
+      <view class="picker-row no-border">
+        <text class="picker-label">食物</text>
+        <text class="picker-value">{{foodOptions[foodIndex] || '无'}}</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 心法选择 -->
+  <view class="card">
+    <view class="section-title">心法选择</view>
+    <view class="mentality-grid">
+      <block wx:for="{{mentalityDisplayList}}" wx:for-item="mental" wx:for-index="index" wx:key="index">
+        <view
+          class="mentality-item {{mental.selected ? 'is-selected' : (mental.disabled ? 'is-disabled' : 'is-unselected')}}"
+          data-name="{{mental.name}}"
+          bindtap="handleToggleMentality"
+        >
+          <text class="mentality-text">{{mental.name}}</text>
+          <text class="mentality-check" wx:if="{{mental.selected}}">已选</text>
+          <text class="mentality-disabled-tip" wx:if="{{mental.disabled}}">已满</text>
+        </view>
+      </block>
+    </view>
+    <view class="tip">最多选择 3 个</view>
+  </view>
+
+
+  <!-- 毕业面板 -->
+  <view class="card">
+    <view class="section-title-row">
+      <view class="section-title no-margin">毕业面板</view>
+      <text class="section-action" bindtap="handleShowGrandPanel" wx:if="{{!ui.showGrandPanel}}">查看毕业面板</text>
+      <text class="section-action" bindtap="toggleGrandPanel" wx:else>收起</text>
+    </view>
+
+    <view class="tip" wx:if="{{!currentGrandPanel}}">
+      当前流派暂无毕业面板数据
+    </view>
+
+    <view wx:if="{{ui.showGrandPanel && currentGrandPanel}}">
+      <view class="group-title">基础面板</view>
+      <view class="summary-list">
+        <view class="summary-item">
+          <text class="summary-label">流派名称</text>
+          <text class="summary-value">{{currentGrandPanel.schoolName || '—'}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">小外 —— 大外</text>
+          <text class="summary-value">{{currentGrandPanel.attackOuterMin}} —— {{currentGrandPanel.attackOuterMax}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">外功穿透</text>
+          <text class="summary-value">{{currentGrandPanel.armorPenetration || '—'}}</text>
+        </view>
+      </view>
+
+      <view class="group-title">四属性</view>
+      <view class="summary-list">
+        <view class="gp-element-block">
+  <view class="gp-element-title">鸣金</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">最小鸣金</text>
+      <text class="gp-element-value">{{currentGrandPanel.mingjinMin || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">最大鸣金</text>
+      <text class="gp-element-value">{{currentGrandPanel.mingjinMax || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">鸣金穿透</text>
+      <text class="gp-element-value">{{currentGrandPanel.mingjinPenetration || '—'}}</text>
+    </view>
+  </view>
+</view>
+
+<view class="gp-element-block">
+  <view class="gp-element-title">裂石</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">最小裂石</text>
+      <text class="gp-element-value">{{currentGrandPanel.lieshiMin || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">最大裂石</text>
+      <text class="gp-element-value">{{currentGrandPanel.lieshiMax || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">裂石穿透</text>
+      <text class="gp-element-value">{{currentGrandPanel.lieshiPenetration || '—'}}</text>
+    </view>
+  </view>
+</view>
+
+<view class="gp-element-block">
+  <view class="gp-element-title">牵丝</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">最小牵丝</text>
+      <text class="gp-element-value">{{currentGrandPanel.qiansiMin || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">最大牵丝</text>
+      <text class="gp-element-value">{{currentGrandPanel.qiansiMax || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">牵丝穿透</text>
+      <text class="gp-element-value">{{currentGrandPanel.qiansiPenetration || '—'}}</text>
+    </view>
+  </view>
+</view>
+
+<view class="gp-element-block">
+  <view class="gp-element-title">破竹</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">最小破竹</text>
+      <text class="gp-element-value">{{currentGrandPanel.pozhuMin || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">最大破竹</text>
+      <text class="gp-element-value">{{currentGrandPanel.pozhuMax || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">破竹穿透</text>
+      <text class="gp-element-value">{{currentGrandPanel.pozhuPenetration || '—'}}</text>
+    </view>
+  </view>
+</view>
+</view>
+<view class="gp-element-block">
+  <view class="gp-element-title">三率</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">精准率</text>
+      <text class="gp-element-value">{{currentGrandPanel.accuracyRate || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">会心率</text>
+      <text class="gp-element-value">{{currentGrandPanel.criticalRate || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">会意率</text>
+      <text class="gp-element-value">{{currentGrandPanel.criticalDamageRate || '—'}}</text>
+    </view>
+  </view>
+  <view class="gp-element-row" style="margin-top: 16rpx;">
+    <view class="gp-element-item">
+      <text class="gp-element-label">直接会心率</text>
+      <text class="gp-element-value">{{currentGrandPanel.directCriticalRate || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">直接会意率</text>
+      <text class="gp-element-value">{{currentGrandPanel.directCriticalDamageRate || '—'}}</text>
+    </view>
+    <view class="gp-element-item"></view>
+  </view>
+</view>
+
+<view class="gp-element-block">
+  <view class="gp-element-title">伤害加成</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">外功伤害</text>
+      <text class="gp-element-value">{{currentGrandPanel.damageBonusOuter || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">属攻伤害</text>
+      <text class="gp-element-value">{{currentGrandPanel.damageBonusElement || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">会心伤害</text>
+      <text class="gp-element-value">{{currentGrandPanel.criticalBonus || '—'}}</text>
+    </view>
+  </view>
+  <view class="gp-element-row" style="margin-top: 16rpx;">
+    <view class="gp-element-item">
+      <text class="gp-element-label">会意伤害</text>
+      <text class="gp-element-value">{{currentGrandPanel.criticalDamageBonus || '—'}}</text>
+    </view>
+    <view class="gp-element-item"></view>
+    <view class="gp-element-item"></view>
+  </view>
+</view>
+
+<view class="gp-element-block">
+  <view class="gp-element-title">额外增伤</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">全部武学增效</text>
+      <text class="gp-element-value">{{currentGrandPanel.allMartialBonus || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">首领增伤</text>
+      <text class="gp-element-value">{{currentGrandPanel.bossBonus || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">单体控制增伤</text>
+      <text class="gp-element-value">{{currentGrandPanel.singleControlBonus || '—'}}</text>
+    </view>
+  </view>
+  <view class="gp-element-row" style="margin-top: 16rpx;">
+    <view class="gp-element-item">
+      <text class="gp-element-label">单体爆发增伤</text>
+      <text class="gp-element-value">{{currentGrandPanel.singleBurstBonus || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">群体伤害增伤</text>
+      <text class="gp-element-value">{{currentGrandPanel.groupDamageBonus || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">群体异常增伤</text>
+      <text class="gp-element-value">{{currentGrandPanel.groupAbnormalBonus || '—'}}</text>
+    </view>
+  </view>
+</view>
+
+      <view class="gp-element-block">
+  <view class="gp-element-title">武器增效</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">增效1</text>
+      <text class="gp-element-value">{{currentGrandPanel.weaponBoost1 || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">增效2</text>
+      <text class="gp-element-value">{{currentGrandPanel.weaponBoost2 || '—'}}</text>
+    </view>
+    <view class="gp-element-item"></view>
+  </view>
+</view>
+
+<view class="gp-element-block">
+  <view class="gp-element-title">定音</view>
+  <view class="gp-element-row">
+    <view class="gp-element-item">
+      <text class="gp-element-label">定音1</text>
+      <text class="gp-element-value">{{currentGrandPanel.noteValue1 || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">定音2</text>
+      <text class="gp-element-value">{{currentGrandPanel.noteValue2 || '—'}}</text>
+    </view>
+    <view class="gp-element-item">
+      <text class="gp-element-label">定音3</text>
+      <text class="gp-element-value">{{currentGrandPanel.noteValue3 || '—'}}</text>
+    </view>
+  </view>
+</view>
+
+      <view class="grand-panel-action">
+        <button class="grand-panel-btn" bindtap="handleApplyGrandPanel">自动填入</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 核心输入 -->
+  <view class="card">
+    <view class="section-title">核心输入</view>
+
+    <view class="group-title">外功面板</view>
+    <view class="form-item">
+      <text class="label">最小外功攻击</text>
+      <input class="input" type="digit" value="{{form.physicalMinAttack}}" data-field="physicalMinAttack" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">最大外功攻击</text>
+      <input class="input" type="digit" value="{{form.physicalMaxAttack}}" data-field="physicalMaxAttack" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">外功穿透</text>
+      <input class="input" type="digit" value="{{form.physicalPenetration}}" data-field="physicalPenetration" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">外功伤害加成（%）</text>
+      <input class="input" type="digit" value="{{form.physicalBonus}}" data-field="physicalBonus" bindinput="handleInput" placeholder="请输入" />
+    </view>
+
+    <view class="group-title">主属性面板</view>
+
+    <block wx:if="{{currentSchool.mainElement === '鸣金'}}">
+      <view class="form-item">
+        <text class="label">最小鸣金攻击</text>
+        <input class="input" type="digit" value="{{form.mingjinMin}}" data-field="mingjinMin" bindinput="handleInput" placeholder="请输入" />
+      </view>
+      <view class="form-item">
+        <text class="label">最大鸣金攻击</text>
+        <input class="input" type="digit" value="{{form.mingjinMax}}" data-field="mingjinMax" bindinput="handleInput" placeholder="请输入" />
+      </view>
+      <view class="form-item">
+        <text class="label">鸣金穿透</text>
+        <input class="input" type="digit" value="{{form.mingjinPen}}" data-field="mingjinPen" bindinput="handleInput" placeholder="请输入" />
+      </view>
+    </block>
+
+    <block wx:elif="{{currentSchool.mainElement === '牵丝'}}">
+      <view class="form-item">
+        <text class="label">最小牵丝攻击</text>
+        <input class="input" type="digit" value="{{form.qiansiMin}}" data-field="qiansiMin" bindinput="handleInput" placeholder="请输入" />
+      </view>
+      <view class="form-item">
+        <text class="label">最大牵丝攻击</text>
+        <input class="input" type="digit" value="{{form.qiansiMax}}" data-field="qiansiMax" bindinput="handleInput" placeholder="请输入" />
+      </view>
+      <view class="form-item">
+        <text class="label">牵丝穿透</text>
+        <input class="input" type="digit" value="{{form.qiansiPen}}" data-field="qiansiPen" bindinput="handleInput" placeholder="请输入" />
+      </view>
+    </block>
+
+    <block wx:elif="{{currentSchool.mainElement === '裂石'}}">
+      <view class="form-item">
+        <text class="label">最小裂石攻击</text>
+        <input class="input" type="digit" value="{{form.lieshiMin}}" data-field="lieshiMin" bindinput="handleInput" placeholder="请输入" />
+      </view>
+      <view class="form-item">
+        <text class="label">最大裂石攻击</text>
+        <input class="input" type="digit" value="{{form.lieshiMax}}" data-field="lieshiMax" bindinput="handleInput" placeholder="请输入" />
+      </view>
+      <view class="form-item">
+        <text class="label">裂石穿透</text>
+        <input class="input" type="digit" value="{{form.lieshiPen}}" data-field="lieshiPen" bindinput="handleInput" placeholder="请输入" />
+      </view>
+    </block>
+
+    <block wx:elif="{{currentSchool.mainElement === '破竹'}}">
+      <view class="form-item">
+        <text class="label">最小破竹攻击</text>
+        <input class="input" type="digit" value="{{form.pozhuMin}}" data-field="pozhuMin" bindinput="handleInput" placeholder="请输入" />
+      </view>
+      <view class="form-item">
+        <text class="label">最大破竹攻击</text>
+        <input class="input" type="digit" value="{{form.pozhuMax}}" data-field="pozhuMax" bindinput="handleInput" placeholder="请输入" />
+      </view>
+      <view class="form-item">
+        <text class="label">破竹穿透</text>
+        <input class="input" type="digit" value="{{form.pozhuPen}}" data-field="pozhuPen" bindinput="handleInput" placeholder="请输入" />
+      </view>
+    </block>
+
+    <view class="form-item">
+      <text class="label">属攻伤害加成（%）</text>
+      <input class="input" type="digit" value="{{form.elementBonus}}" data-field="elementBonus" bindinput="handleInput" placeholder="请输入" />
+    </view>
+
+    <!-- 其他属性输入 -->
+    <view class="section-title-row">
+      <view class="group-title">其他属性输入</view>
+      <text class="section-action" bindtap="toggleAllElements">
+        {{ui.showAllElements ? '收起' : '展开'}}
+      </text>
+    </view>
+
+    <view wx:if="{{ui.showAllElements}}">
+      <block wx:if="{{currentSchool.mainElement !== '鸣金'}}">
+        <view class="sub-title">鸣金</view>
+        <view class="form-item">
+          <text class="label">鸣金最小攻击</text>
+          <input class="input" type="digit" value="{{form.mingjinMin}}" data-field="mingjinMin" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">鸣金最大攻击</text>
+          <input class="input" type="digit" value="{{form.mingjinMax}}" data-field="mingjinMax" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">鸣金穿透</text>
+          <input class="input" type="digit" value="{{form.mingjinPen}}" data-field="mingjinPen" bindinput="handleInput" />
+        </view>
+      </block>
+
+      <block wx:if="{{currentSchool.mainElement !== '牵丝'}}">
+        <view class="sub-title">牵丝</view>
+        <view class="form-item">
+          <text class="label">牵丝最小攻击</text>
+          <input class="input" type="digit" value="{{form.qiansiMin}}" data-field="qiansiMin" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">牵丝最大攻击</text>
+          <input class="input" type="digit" value="{{form.qiansiMax}}" data-field="qiansiMax" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">牵丝穿透</text>
+          <input class="input" type="digit" value="{{form.qiansiPen}}" data-field="qiansiPen" bindinput="handleInput" />
+        </view>
+      </block>
+
+      <block wx:if="{{currentSchool.mainElement !== '裂石'}}">
+        <view class="sub-title">裂石</view>
+        <view class="form-item">
+          <text class="label">裂石最小攻击</text>
+          <input class="input" type="digit" value="{{form.lieshiMin}}" data-field="lieshiMin" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">裂石最大攻击</text>
+          <input class="input" type="digit" value="{{form.lieshiMax}}" data-field="lieshiMax" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">裂石穿透</text>
+          <input class="input" type="digit" value="{{form.lieshiPen}}" data-field="lieshiPen" bindinput="handleInput" />
+        </view>
+      </block>
+
+      <block wx:if="{{currentSchool.mainElement !== '破竹'}}">
+        <view class="sub-title">破竹</view>
+        <view class="form-item">
+          <text class="label">破竹最小攻击</text>
+          <input class="input" type="digit" value="{{form.pozhuMin}}" data-field="pozhuMin" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">破竹最大攻击</text>
+          <input class="input" type="digit" value="{{form.pozhuMax}}" data-field="pozhuMax" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">破竹穿透</text>
+          <input class="input" type="digit" value="{{form.pozhuPen}}" data-field="pozhuPen" bindinput="handleInput" />
+        </view>
+      </block>
+    </view>
+
+    <view class="group-title">三率（输入黄字）</view>
+    <view class="form-item">
+      <text class="label">精准率（%）</text>
+      <input class="input" type="digit" value="{{form.precisionRate}}" data-field="precisionRate" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">会心率（%）</text>
+      <input class="input" type="digit" value="{{form.insightRate}}" data-field="insightRate" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">直接会心率（%）</text>
+      <input class="input" type="digit" value="{{form.directInsightRate}}" data-field="directInsightRate" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">会意率（%）</text>
+      <input class="input" type="digit" value="{{form.perfectRate}}" data-field="perfectRate" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">直接会意率（%）</text>
+      <input class="input" type="digit" value="{{form.directPerfectRate}}" data-field="directPerfectRate" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">会心伤害加成（%）</text>
+      <input class="input" type="digit" value="{{form.insightDamageBonus}}" data-field="insightDamageBonus" bindinput="handleInput" placeholder="请输入" />
+    </view>
+    <view class="form-item">
+      <text class="label">会意伤害加成（%）</text>
+      <input class="input" type="digit" value="{{form.perfectDamageBonus}}" data-field="perfectDamageBonus" bindinput="handleInput" placeholder="请输入" />
+    </view>
+
+    <view class="tip-box">
+      普通会心率封顶 80%，普通会意率封顶 40%；直接会心/会意可突破上限。
+    </view>
+
+    <!-- 其他属性输入 -->
+    <view class="section-title-row">
+      <view class="group-title no-margin">其他属性输入</view>
+      <text class="section-action" bindtap="toggleAllElements">
+        {{ui.showAllElements ? '收起' : '展开'}}
+      </text>
+    </view>
+
+    <view wx:if="{{ui.showAllElements}}">
+      <block wx:if="{{currentSchool.mainElement !== '鸣金'}}">
+        <view class="sub-title">鸣金</view>
+        <view class="form-item">
+          <text class="label">鸣金最小攻击</text>
+          <input class="input" type="digit" value="{{form.mingjinMin}}" data-field="mingjinMin" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">鸣金最大攻击</text>
+          <input class="input" type="digit" value="{{form.mingjinMax}}" data-field="mingjinMax" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">鸣金穿透</text>
+          <input class="input" type="digit" value="{{form.mingjinPen}}" data-field="mingjinPen" bindinput="handleInput" />
+        </view>
+      </block>
+
+      <block wx:if="{{currentSchool.mainElement !== '牵丝'}}">
+        <view class="sub-title">牵丝</view>
+        <view class="form-item">
+          <text class="label">牵丝最小攻击</text>
+          <input class="input" type="digit" value="{{form.qiansiMin}}" data-field="qiansiMin" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">牵丝最大攻击</text>
+          <input class="input" type="digit" value="{{form.qiansiMax}}" data-field="qiansiMax" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">牵丝穿透</text>
+          <input class="input" type="digit" value="{{form.qiansiPen}}" data-field="qiansiPen" bindinput="handleInput" />
+        </view>
+      </block>
+
+      <block wx:if="{{currentSchool.mainElement !== '裂石'}}">
+        <view class="sub-title">裂石</view>
+        <view class="form-item">
+          <text class="label">裂石最小攻击</text>
+          <input class="input" type="digit" value="{{form.lieshiMin}}" data-field="lieshiMin" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">裂石最大攻击</text>
+          <input class="input" type="digit" value="{{form.lieshiMax}}" data-field="lieshiMax" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">裂石穿透</text>
+          <input class="input" type="digit" value="{{form.lieshiPen}}" data-field="lieshiPen" bindinput="handleInput" />
+        </view>
+      </block>
+
+      <block wx:if="{{currentSchool.mainElement !== '破竹'}}">
+        <view class="sub-title">破竹</view>
+        <view class="form-item">
+          <text class="label">破竹最小攻击</text>
+          <input class="input" type="digit" value="{{form.pozhuMin}}" data-field="pozhuMin" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">破竹最大攻击</text>
+          <input class="input" type="digit" value="{{form.pozhuMax}}" data-field="pozhuMax" bindinput="handleInput" />
+        </view>
+        <view class="form-item">
+          <text class="label">破竹穿透</text>
+          <input class="input" type="digit" value="{{form.pozhuPen}}" data-field="pozhuPen" bindinput="handleInput" />
+        </view>
+      </block>
+    </view>
+
+    <view class="group-title">其他乘区</view>
+    <view class="form-item">
+      <text class="label">全部武学增效（%）</text>
+      <input class="input" type="digit" value="{{form.allMartialBonus}}" data-field="allMartialBonus" bindinput="handleInput" placeholder="如 2.2 或 2.2%" />
+    </view>
+    <view class="form-item">
+      <text class="label">首领增伤（%）</text>
+      <input class="input" type="digit" value="{{form.bossBonus}}" data-field="bossBonus" bindinput="handleInput" placeholder="如 2.4 或 2.4%" />
+    </view>
+    <view class="form-item">
+      <text class="label">单体控制增伤（%）</text>
+      <input class="input" type="digit" value="{{form.singleControlBonus}}" data-field="singleControlBonus" bindinput="handleInput" placeholder="如 7 或 7%" />
+    </view>
+    <view class="form-item">
+      <text class="label">单体爆发增伤（%）</text>
+      <input class="input" type="digit" value="{{form.singleBurstBonus}}" data-field="singleBurstBonus" bindinput="handleInput" placeholder="如 7 或 7%" />
+    </view>
+    <view class="form-item">
+      <text class="label">群体伤害增伤（%）</text>
+      <input class="input" type="digit" value="{{form.groupDamageBonus}}" data-field="groupDamageBonus" bindinput="handleInput" placeholder="如 7 或 7%" />
+    </view>
+    <view class="form-item no-border">
+      <text class="label">群体异常增伤（%）</text>
+      <input class="input" type="digit" value="{{form.groupAbnormalBonus}}" data-field="groupAbnormalBonus" bindinput="handleInput" placeholder="如 7 或 7%" />
+    </view>
+    <!-- 定音设置 -->
+<view class="group-title" wx:if="{{
+  (currentSchool.notes[0] && currentSchool.notes[0] !== 'N/A') ||
+  (currentSchool.notes[1] && currentSchool.notes[1] !== 'N/A') ||
+  (currentSchool.notes[2] && currentSchool.notes[2] !== 'N/A')
+}}">定音设置</view>
+
+<view class="form-item" wx:if="{{currentSchool.notes[0] && currentSchool.notes[0] !== 'N/A'}}">
+  <text class="label">{{currentSchool.notes[0]}}（%）</text>
+  <input class="input" type="digit" value="{{form.noteValue1}}" data-field="noteValue1" bindinput="handleInput" placeholder="如 17.2" />
+</view>
+<view class="form-item" wx:if="{{currentSchool.notes[1] && currentSchool.notes[1] !== 'N/A'}}">
+  <text class="label">{{currentSchool.notes[1]}}（%）</text>
+  <input class="input" type="digit" value="{{form.noteValue2}}" data-field="noteValue2" bindinput="handleInput" placeholder="如 17.2" />
+</view>
+<view class="form-item" wx:if="{{currentSchool.notes[2] && currentSchool.notes[2] !== 'N/A'}}">
+  <text class="label">{{currentSchool.notes[2]}}（%）</text>
+  <input class="input" type="digit" value="{{form.noteValue3}}" data-field="noteValue3" bindinput="handleInput" placeholder="如 17.2" />
+</view>
+
+<!-- 武学增效 -->
+<view class="group-title" wx:if="{{currentSchool.martialBoost1Name || currentSchool.martialBoost2Name}}">
+  武学增效
+</view>
+<view class="form-item" wx:if="{{currentSchool.martialBoost1Name}}">
+  <text class="label">{{currentSchool.martialBoost1Name}}（武器：{{currentSchool.weapon1 || '无'}}）（%）</text>
+  <input class="input" type="digit" value="{{form.martialBoostValue1}}" data-field="martialBoostValue1" bindinput="handleInput" placeholder="如 4.4" />
+</view>
+<view class="form-item" wx:if="{{currentSchool.martialBoost2Name}}">
+  <text class="label">{{currentSchool.martialBoost2Name}}（武器：{{currentSchool.weapon2 || '无'}}）（%）</text>
+  <input class="input" type="digit" value="{{form.martialBoostValue2}}" data-field="martialBoostValue2" bindinput="handleInput" placeholder="如 4.4" />
+</view>
+  </view>
+  <!-- 更新日志弹窗 -->
+  <view wx:if="{{showUpdatePopup}}" class="update-mask">
+    <view class="update-popup">
+      <view class="update-title">更新日志</view>
+      <view class="update-version">版本 {{updateLogVersion}}</view>
+
+      <view class="update-content">
+        <view wx:for="{{updateLogContent}}" wx:key="index" class="update-item">
+          {{index + 1}}. {{item}}
+        </view>
+      </view>
+
+      <button class="update-btn" bindtap="closeUpdatePopup">我知道了</button>
+    </view>
+  </view>
+
+  <!-- 操作栏 -->
+  <view class="action-bar">
+    <button class="reset-btn" bindtap="resetForm">重置</button>
+    <button class="calc-btn" bindtap="handleCalculate">开始计算</button>
+  </view>
+</view>
+</view>
+
+<!-- ===== 详细结果页 ===== -->
+<view wx:if="{{ui.currentTab === 'detail'}}" class="detail-container">
+
+<!-- 轴详细结果标题块 -->
+<view class="other-block" style="text-align: center;">
+  <view class="other-block-title" style="text-align: center;">轴详细结果</view>
+  <view class="other-app-name">{{axisResult.schoolName || '—'}} · {{axisResult.axisName || '—'}}</view>
+  <view class="other-version-badge" style="align-self: center; margin-top: 12rpx;">{{currentTarget.targetName || '—'}}</view>
+</view>
+
+<view wx:if="{{axisResult}}">
+
+  <!-- DPS 和毕业率汇总块 -->
+  <view class="other-block">
+    <view class="other-block-title">汇总</view>
+    <view class="detail-summary-grid">
+      <view class="detail-summary-item">
+        <text class="detail-summary-label">总期望伤害</text>
+        <text class="detail-summary-value">{{axisResult.totalExpectedDamage}}</text>
+      </view>
+      <view class="detail-summary-item">
+        <text class="detail-summary-label">实际 DPS</text>
+        <text class="detail-summary-value">{{axisResult.dps}}</text>
+      </view>
+      <view class="detail-summary-item">
+        <text class="detail-summary-label">毕业 DPS</text>
+        <text class="detail-summary-value">{{axisResult.graduateDps}}</text>
+      </view>
+      <view class="detail-summary-item">
+        <text class="detail-summary-label">毕业率</text>
+        <text class="detail-summary-value highlight">{{axisResult.graduateRate}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 技能明细 -->
+  <view
+    wx:for="{{axisResult.details}}"
+    wx:for-index="idx"
+    wx:key="idx"
+    wx:if="{{item.skillName !== 'N/A' && item.count !== 0 && item.count !== '0'}}"
+    class="detail-card"
+  >
+    <!-- 技能序号角标 -->
+    <view class="detail-index">{{idx + 1}}</view>
+
+    <view class="detail-header">
+      <text class="detail-name">{{item.skillName}}</text>
+      <text class="detail-count">×{{item.count}}</text>
+    </view>
+
+    <view class="detail-grid">
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">期望伤害</text>
+        <text class="detail-grid-value">{{item.expectedDamage}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">总伤害</text>
+        <text class="detail-grid-value">{{item.totalDamage}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">会心率</text>
+        <text class="detail-grid-value">{{item.finalInsightRate}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">会意率</text>
+        <text class="detail-grid-value">{{item.finalPerfectRate}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">会心伤害加成</text>
+        <text class="detail-grid-value">{{item.insightDamageBonus}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">会意伤害加成</text>
+        <text class="detail-grid-value">{{item.perfectDamageBonus}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">总增伤</text>
+        <text class="detail-grid-value">{{item.totalDamageIncrease}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">武学增效</text>
+        <text class="detail-grid-value">{{item.martialBoostDamageIncrease}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">首领增伤</text>
+        <text class="detail-grid-value">{{item.bossBonus}}</text>
+      </view>
+      <view class="detail-grid-item">
+        <text class="detail-grid-label">定音增伤</text>
+        <text class="detail-grid-value">{{item.noteValue}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{item.error}}" class="detail-error-row">
+      <text class="detail-error">{{item.error}}</text>
+    </view>
+  </view>
+
+</view>
+
+<view wx:else class="other-empty">暂无轴计算结果</view>
+
+<!-- 回到顶部按钮 -->
+<view class="scroll-top-btn" bindtap="handleScrollToTop">
+  <text class="scroll-top-icon">↑</text>
+</view>
+
+</view>
+
+<!-- ===== 其他页 ===== -->
+<view wx:if="{{ui.currentTab === 'other'}}" class="other-container">
+
+<!-- 关于 -->
+<view class="other-block">
+  <view class="other-block-title">关于</view>
+  <view class="other-about-body">
+    <view class="other-app-name">国际服全流派毕业度计算器</view>
+    <view class="other-version-badge">v3.0.0</view>
+  </view>
+</view>
+
+<!-- 装备管理 -->
+<view class="other-block" bindtap="navigateToEquipment">
+  <view class="other-block-title">⚔️装备管理</view>
+  <view class="other-config-label">管理和保存装备配置</view>
+</view>
+
+<!-- 历史配置 -->
+<view class="other-block">
+  <view class="other-block-title">历史配置</view>
+  <view wx:if="{{savedConfigs.length === 0}}" class="other-empty">暂无保存记录</view>
+  <view
+    wx:for="{{savedConfigs}}"
+    wx:key="id"
+    class="other-config-item"
+  >
+    <view class="other-config-top">
+      <text class="other-config-label">{{item.label}}</text>
+      <text class="other-config-time">{{item.saveTime}}</text>
+    </view>
+    <view class="other-config-actions">
+      <button class="other-btn-load" data-index="{{index}}" bindtap="handleLoadConfig">加载</button>
+      <button class="other-btn-delete" data-index="{{index}}" bindtap="handleDeleteConfig">删除</button>
+    </view>
+  </view>
+</view>
+
+<!-- 手动配置 -->
+<view class="other-block">
+  <view class="other-block-title">手动配置</view>
+
+  <view
+    wx:for="{{manualSavedConfigs}}"
+    wx:key="index"
+    class="other-config-item manual-config-item"
+  >
+    <view class="other-config-top">
+      <text class="other-config-label">
+        配置栏{{index + 1}}：{{item 
+          ? item.label + (item.axisResult ? ' · ' + item.axisResult.graduateRate : '') 
+          : '空'}}
+      </text>
+      <text class="other-config-time">
+        {{item ? item.saveTime : ''}}
+      </text>
+    </view>
+
+    <view class="other-config-actions">
+      <button
+        wx:if="{{item}}"
+        class="other-btn-load"
+        data-index="{{index}}"
+        bindtap="handleLoadManualConfig"
+      >
+        加载
+      </button>
+
+      <button
+        wx:if="{{item}}"
+        class="other-btn-delete"
+        data-index="{{index}}"
+        bindtap="handleDeleteManualConfig"
+      >
+        删除
+      </button>
+
+      <text wx:if="{{!item}}" class="other-empty-slot">当前为空</text>
+    </view>
+  </view>
+</view>
+
+</view>
+
+<!-- ===== 保存当前配置按钮（面板页显示） ===== -->
+<view
+  wx:if="{{ui.currentTab === 'panel'}}"
+  class="manual-save-btn"
+  bindtap="handleManualSaveConfig"
+>
+  <text>存</text>
+</view>
+<!-- ===== 回到顶部按钮（面板页显示） ===== -->
+<view
+  wx:if="{{ui.currentTab === 'panel'}}"
+  class="scroll-top-btn"
+  bindtap="handleScrollToTop"
+>
+  <text>↑</text>
+</view>
+
+<!-- ===== 提升页 ===== -->
+<view wx:if="{{ui.currentTab === 'improve'}}" class="other-container">
+
+<block wx:if="{{!improveReady}}">
+  <view class="other-block">
+    <view class="other-empty">请先在面板页点击「开始计算」</view>
+  </view>
+</block>
+
+<block wx:else>
+
+  <!-- 面板分析卡片 -->
+  <view class="other-block">
+    <view class="section-title-row" bindtap="togglePanelAnalysis">
+      <view class="other-block-title" style="font-size: 36rpx; color: #fa8c16; font-weight: 700;">面板分析</view>
+      <text class="section-action">{{ui.showPanelAnalysis ? '收起' : '展开'}}</text>
+    </view>
+    <view wx:if="{{ui.showPanelAnalysis}}">
+      <view wx:if="{{panelAdviceList.length === 0}}" class="other-empty">
+        当前面板无需优化，配置良好
+      </view>
+      <view
+        wx:for="{{panelAdviceList}}"
+        wx:key="index"
+        class="advice-item {{item.level === 'warn' ? 'advice-warn' : 'advice-info'}}"
+      >
+        <text class="advice-icon">{{item.level === 'warn' ? '⚠️' : 'ℹ️'}}</text>
+        <text class="advice-text">{{item.text}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 词条提升分析卡片 -->
+  <view class="other-block" style="padding-bottom: 10rpx;">
+    <view class="other-block-title" style="font-size: 36rpx; color: #1677ff; font-weight: 700;">词条提升分析</view>
+    <view class="improve-sub-title">
+      基准 DPS：{{axisResult.dps}} · 每行为加入一条满值词条后的预估收益
+    </view>
+  </view>
+
+  <!-- 表头 -->
+  <view class="improve-table-header">
+    <text class="improve-col improve-col-name">词条</text>
+    <text class="improve-col improve-col-max">满值</text>
+    <text class="improve-col improve-col-dps">提升后DPS</text>
+    <text class="improve-col improve-col-rate">提升率</text>
+  </view>
+
+  <!-- 数据行 -->
+  <view class="improve-table-body">
+    <view
+      wx:for="{{improveList}}"
+      wx:key="name"
+      class="improve-row {{index % 2 === 0 ? 'improve-row-even' : 'improve-row-odd'}}"
+    >
+      <text class="improve-col improve-col-name">{{item.name}}</text>
+      <text class="improve-col improve-col-max">{{item.maxValue}}</text>
+      <text class="improve-col improve-col-dps">{{item.boostedDps}}</text>
+      <text class="improve-col improve-col-rate improve-highlight">{{item.improveRate}}</text>
+    </view>
+  </view>
+
+</block>
+
+</view>
+
+<!-- ===== 底部导航栏 ===== -->
+<view class="tab-bar">
+  <view
+    class="tab-item {{ui.currentTab === 'panel' ? 'tab-active' : ''}}"
+    data-tab="panel"
+    bindtap="handleTabChange"
+  >
+    <text class="tab-icon">📋</text>
+    <text class="tab-label">面板</text>
+  </view>
+
+  <view
+    class="tab-item {{ui.currentTab === 'detail' ? 'tab-active' : ''}}"
+    data-tab="detail"
+    bindtap="handleTabChange"
+  >
+    <text class="tab-icon">📊</text>
+    <text class="tab-label">详细结果</text>
+  </view>
+
+  <view
+    class="tab-item {{ui.currentTab === 'improve' ? 'tab-active' : ''}}"
+    data-tab="improve"
+    bindtap="handleTabChange"
+  >
+    <text class="tab-icon">📈</text>
+    <text class="tab-label">提升</text>
+  </view>
+
+  <view
+    class="tab-item {{ui.currentTab === 'other' ? 'tab-active' : ''}}"
+    data-tab="other"
+    bindtap="handleTabChange"
+  >
+    <text class="tab-icon">⚙️</text>
+    <text class="tab-label">配置</text>
+  </view>
+</view>

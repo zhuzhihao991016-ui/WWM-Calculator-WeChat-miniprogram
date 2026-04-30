@@ -1,0 +1,530 @@
+<view class="container">
+  <view class="panel-display">
+  <!-- 标题行 + 收起按钮 -->
+  <view class="panel-header-row">
+    <view class="panel-header-left">
+      <text class="panel-title">基础面板</text>
+      <text wx:if="{{currentSchool}}" class="school-tag">{{currentSchool.schoolName}}</text>
+    </view>
+    <view
+      wx:if="{{basePanelDisplay.length > 0}}"
+      class="panel-collapse-btn"
+      bindtap="togglePanelCollapse"
+    >
+      <text>{{panelCollapsed ? '展开' : '收起'}}</text>
+    </view>
+  </view>
+
+  <!-- 面板属性列表 -->
+  <view wx:if="{{basePanelDisplay.length > 0 && !panelCollapsed}}" class="panel-attrs">
+    <view
+      wx:for="{{basePanelDisplay}}"
+      wx:key="index"
+      class="panel-attr-row"
+    >
+      <text class="panel-attr-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 收起时的摘要提示 -->
+  <view wx:if="{{basePanelDisplay.length > 0 && panelCollapsed}}" class="panel-collapsed-hint">
+    <text>已校准 {{basePanelDisplay.length}} 项属性，点击展开查看</text>
+  </view>
+
+  <!-- 未校准时的等待提示 -->
+  <view wx:if="{{basePanelDisplay.length === 0}}" class="panel-waiting">
+    <text>等待基础面板校准</text>
+  </view>
+</view>
+
+<!-- OCR 智能录入入口 -->
+<view class="ocr-entry-card">
+  <view class="ocr-entry-left">
+    <view class="ocr-icon-wrap">
+      <text class="ocr-icon">识</text>
+    </view>
+
+    <view class="ocr-entry-content">
+      <view class="ocr-title-row">
+        <text class="ocr-title">截图识别添加</text>
+        <text class="ocr-badge">Beta</text>
+      </view>
+      <text class="ocr-desc">上传装备截图，自动识别名称、部位、词条与定音技</text>
+    </view>
+  </view>
+
+  <view class="ocr-entry-action" bindtap="handleOcrAddEquipment">
+    <text>{{ocrLoading ? '识别中' : '开始识别'}}</text>
+    <text class="ocr-entry-arrow">›</text>
+  </view>
+</view>
+
+  <!-- 筛选器 -->
+  <view class="filter-card">
+  <view class="filter-row">
+    <view 
+      wx:for="{{filterRow1}}" wx:key="key"
+      class="filter-btn {{filterSlot === item.key ? 'filter-btn-active' : (filterSlot !== 'all' ? 'filter-btn-dim' : '')}}"
+      bindtap="onFilterTap"
+      data-slot="{{item.key}}"
+    >
+      <text wx:if="{{filterSlot === item.key}}" class="filter-badge">已选</text>
+      <text class="filter-btn-text">{{item.name}}</text>
+    </view>
+  </view>
+  <view class="filter-row">
+    <view 
+      wx:for="{{filterRow2}}" wx:key="key"
+      class="filter-btn {{filterSlot === item.key ? 'filter-btn-active' : (filterSlot !== 'all' ? 'filter-btn-dim' : '')}}"
+      bindtap="onFilterTap"
+      data-slot="{{item.key}}"
+    >
+      <text wx:if="{{filterSlot === item.key}}" class="filter-badge">已选</text>
+      <text class="filter-btn-text">{{item.name}}</text>
+    </view>
+  </view>
+</view>
+
+  <!-- 装备库 -->
+<!-- 装备列表 -->
+<view class="equip-list">
+    <view
+      wx:for="{{filteredList}}"
+      wx:key="*this"
+      class="equip-card"
+     bindtap="openDetailDialog"
+      data-index="{{index}}"
+    >
+    <!-- 左侧信息 -->
+    <view class="equip-card-left">
+      <view class="equip-card-title-row">
+        <text class="equip-card-name">{{item.name}}</text>
+        <text class="equip-card-slot-tag">{{item.slotName}}</text>
+      </view>
+      <view class="equip-card-meta-row">
+        <text class="equip-card-meta">{{item.qualityName}}</text>
+        <text class="equip-card-meta">Lv.{{item.level}}</text>
+      </view>
+      <view class="equip-card-affix-row">
+        <text class="equip-card-affix-label">词条：</text>
+        <text class="equip-card-affix-names">{{item.affixNames}}</text>
+      </view>
+    </view>
+    <!-- 右侧箭头 -->
+    <view class="equip-card-right">
+      <text class="equip-card-arrow">›</text>
+    </view>
+  </view>
+</view>
+
+<!-- 装备详情弹窗 -->
+<view wx:if="{{showDetailDialog}}" class="dialog-mask" bindtap="closeDetailDialog">
+  <view class="dialog-box detail-box" catchtap="noop">
+
+    <!-- 标题栏 -->
+    <view class="dialog-header">
+      <text class="dialog-title">装备详情</text>
+      <view class="dialog-close" bindtap="closeDetailDialog">✕</view>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="detail-section">
+      <view class="detail-row">
+        <text class="detail-label">名称</text>
+        <text class="detail-value">{{detailEquipment.name}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">部位</text>
+        <text class="detail-value">{{detailEquipment.slotName}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">品阶</text>
+        <text class="detail-value">{{detailEquipment.qualityName}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">等级</text>
+        <text class="detail-value">Lv.{{detailEquipment.level}}</text>
+      </view>
+    </view>
+
+    <!-- 词条列表 -->
+    <view class="detail-section">
+      <text class="detail-section-title">词条</text>
+      <view
+        wx:for="{{detailEquipment.affixes}}"
+        wx:key="index"
+        class="detail-affix-row"
+      >
+        <text class="detail-affix-name">{{item.name}}</text>
+        <text class="detail-affix-value" wx:if="{{!item.isNA}}">
+          {{item.isPercent ? item.value * 100 : item.value}}{{item.isPercent ? '%' : ''}}
+        </text>
+        <text class="detail-affix-value affix-na" wx:else>—</text>
+      </view>
+      <view wx:if="{{detailEquipment.affixes.length === 0}}">
+        <text class="detail-empty">暂无词条</text>
+      </view>
+    </view>
+
+    <!-- 定音技区域 -->
+<view class="detail-section">
+  <text class="detail-section-title">定音技</text>
+  <view class="detail-row" wx:if="{{detailEquipment.tuneSkill}}">
+    <text class="detail-label">{{detailEquipment.tuneSkill.name}}</text>
+    <text class="detail-value" wx:if="{{detailEquipment.tuneSkill.name !== 'N/A'}}">
+      {{detailEquipment.tuneSkill.value}}
+    </text>
+    <text class="detail-value" wx:else>—</text>
+  </view>
+  <view wx:if="{{!detailEquipment.tuneSkill}}">
+    <text class="detail-empty">暂无定音技</text>
+  </view>
+</view>
+
+    <!-- 操作区 -->
+    <view class="detail-actions">
+      <view class="dialog-btn detail-btn-edit" bindtap="editFromDetail">编辑</view>
+      <view class="dialog-btn detail-btn-delete" bindtap="deleteFromDetail">删除</view>
+    </view>
+
+  </view>
+</view>
+
+<!-- OCR 原文预览弹窗 -->
+<view wx:if="{{showOcrPreviewDialog}}" class="dialog-mask" bindtap="closeOcrPreviewDialog">
+  <view class="dialog-box ocr-preview-box" catchtap="noop">
+
+    <view class="dialog-header">
+      <text class="dialog-title">OCR识别结果</text>
+      <view class="dialog-close" bindtap="closeOcrPreviewDialog">✕</view>
+    </view>
+
+    <view class="ocr-preview-tip">
+      <text>未能自动解析为装备，请查看识别原文后重新截图或手动添加。</text>
+    </view>
+
+    <scroll-view scroll-y class="ocr-raw-scroll">
+      <text class="ocr-raw-text">{{ocrRawText}}</text>
+    </scroll-view>
+
+    <view class="dialog-actions">
+      <view class="dialog-btn dialog-btn-cancel" catchtap="closeOcrPreviewDialog">关闭</view>
+      <view class="dialog-btn dialog-btn-confirm" catchtap="openAddDialog">手动添加</view>
+    </view>
+
+  </view>
+</view>
+
+  <!-- 底部导航栏 -->
+<view class="action-bar">
+  <button class="action-btn btn-add" bindtap="openAddDialog">添加装备</button>
+  <button class="action-btn btn-clear" bindtap="handleClearAll">清空装备</button>
+  <button class="action-btn btn-calibrate" bindtap="openCalibrationDialog">校准面板</button>
+  <button class="action-btn btn-traverse" bindtap="handleTraverse">开始遍历</button>
+</view>
+
+  <!-- 添加装备弹窗 -->
+  <view wx:if="{{showAddDialog}}" class="dialog-mask" bindtap="closeDialog">
+  <view class="dialog-box" catchtap="noop">
+
+    <!-- 标题栏 -->
+    <view class="dialog-header">
+      <text class="dialog-title">添加装备</text>
+      <view class="dialog-close" bindtap="closeDialog">✕</view>
+    </view>
+
+    <!-- 装备名称 -->
+    <view class="form-item">
+      <text class="form-label">装备名称</text>
+      <input
+        class="form-input"
+        placeholder="请输入装备名称"
+        value="{{newEquipment.name}}"
+        bindinput="onInputName"
+      />
+    </view>
+
+    <!-- 部位选择 -->
+    <view class="form-item">
+      <text class="form-label">部位</text>
+      <picker mode="selector" range="{{slots}}" range-key="name" bindchange="onChangeSlot">
+        <view class="form-picker">
+          <text>{{newEquipmentSlotName}}</text>
+          <text class="picker-arrow">▾</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 品阶 + 等级 同行 -->
+    <view class="form-row">
+      <view class="form-item flex1">
+        <text class="form-label">品阶</text>
+        <picker
+              class="form-picker"
+              mode="selector"
+              range="{{qualityOptions}}"
+              value="{{qualityIndex}}"
+              bindchange="onChangeQuality"
+        >
+          <view class="picker-value">
+          {{qualityOptions[qualityIndex]}}
+           <text class="picker-arrow">▾</text>
+          </view>
+        </picker>
+      </view>
+      <view class="form-item flex1">
+        <text class="form-label">等级</text>
+        <picker
+          class="form-picker"
+          mode="selector"
+          range="{{levelOptions}}"
+          value="{{levelIndex}}"
+          bindchange="onChangeLevel"
+        >
+        <view class="picker-value">
+          {{levelOptions[levelIndex]}}级
+          <text class="picker-arrow">▾</text>
+        </view>
+        </picker>
+      </view>
+    </view>
+
+<!-- 词条区域 -->
+<view class="form-item">
+  <view class="form-label-row">
+    <text class="form-label">词条</text>
+    <text class="form-label-sub">（已添加 {{newEquipment.affixes.length}}/5）</text>
+  </view>
+
+  <!-- 已添加的词条列表 -->
+  <view class="selected-affixes" wx:if="{{newEquipment.affixes.length > 0}}">
+   <view
+     wx:for="{{newEquipment.affixes}}"
+      wx:key="index"
+     class="selected-affix-row"
+    >
+      <text class="selected-affix-name">{{item.name}}</text>
+      <text class="selected-affix-value" wx:if="{{!item.isNA}}">
+       {{item.isPercent ? item.value * 100 : item.value}}{{item.isPercent ? '%' : ''}}
+      </text>
+     <text class="selected-affix-value affix-na" wx:else>—</text>
+      <view class="affix-remove" bindtap="removeAffix" data-name="{{item.name}}">✕</view>
+   </view>
+  </view>
+
+  <!-- 添加词条按钮 -->
+  <view
+    wx:if="{{newEquipment.affixes.length < 5}}"
+    class="add-affix-btn"
+    bindtap="openAffixPickerDialog"
+    data-index="{{index}}"
+  >
+    <text>＋ 添加词条</text>
+  </view>
+</view>
+
+<!-- 词条选择子弹窗 -->
+<view wx:if="{{showAffixPicker}}" class="sub-dialog-mask" catchtap="closeAffixPicker">
+  <view class="sub-dialog-box" catchtap="noop">
+
+    <!-- 标题栏 -->
+    <view class="dialog-header">
+      <view wx:if="{{affixPickerStep === 'input'}}" class="dialog-back" bindtap="onAffixPickerBack">‹ 返回</view>
+      <text class="dialog-title">{{affixPickerStep === 'pick' ? '选择词条' : tempAffix.name}}</text>
+      <view class="dialog-close" bindtap="closeAffixPicker">✕</view>
+    </view>
+
+    <!-- Step 1：分组 Tab + 词条列表 -->
+    <block wx:if="{{affixPickerStep === 'pick'}}">
+      <!-- 三个 Tab -->
+      <view class="affix-tab-row">
+        <view
+          wx:for="{{affixPickerGroups}}"
+          wx:key="key"
+          class="affix-tab {{affixPickerGroupIndex === index ? 'affix-tab-active' : ''}}"
+          bindtap="onAffixGroupTab"
+          data-index="{{index}}"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+
+      <!-- 词条列表 -->
+      <view class="affix-picker-list">
+        <view
+          wx:for="{{affixPickerItems}}"
+          wx:key="name"
+          class="affix-picker-item"
+          bindtap="onAffixPickerSelect"
+          data-name="{{item.name}}"
+        >
+          <text class="affix-picker-name">{{item.displayName}}</text>
+          <text class="affix-picker-max" wx:if="{{!item.isNA}}">
+            满值 {{item.max}}{{item.isPercent ? '%' : ''}}
+          </text>
+        </view>
+      </view>
+    </block>
+
+    <!-- Step 2：数值输入 -->
+    <block wx:if="{{affixPickerStep === 'input'}}">
+      <view class="form-item">
+        <view class="form-label-row">
+          <text class="form-label">数值</text>
+          <text class="form-label-sub">（满值 {{tempAffix.max}}{{tempAffix.isPercent ? '%' : ''}}）</text>
+        </view>
+        <view class="input-suffix-row">
+          <input
+            class="form-input"
+            type="digit"
+            placeholder="请输入词条数值"
+            value="{{tempAffix.value}}"
+            bindinput="onInputAffixValue"
+          />
+          <text wx:if="{{tempAffix.isPercent}}" class="input-suffix">%</text>
+        </view>
+      </view>
+
+      <view class="dialog-actions">
+        <button class="dialog-btn dialog-btn-cancel" bindtap="onAffixPickerBack">返回</button>
+        <button class="dialog-btn dialog-btn-confirm" bindtap="confirmAddAffix">确认</button>
+      </view>
+    </block>
+
+  </view>
+</view>
+
+<!-- 定音技选择 -->
+<view class="form-section">
+  <text class="form-label">定音技</text>
+  <scroll-view class="tune-chips" scroll-x>
+    <view
+      wx:for="{{currentTuneSkills}}"
+      wx:key="index"
+      class="tune-chip {{newEquipment.tuneSkill === item.name ? 'tune-chip-selected' : ''}}"
+      bindtap="selectTuneSkill"
+      data-name="{{item.name}}"
+    >{{item.name}}</view>
+  </scroll-view>
+
+  <!-- 只有武器/环/佩部位且选了非N/A定音技才显示数值输入 -->
+  <view
+    wx:if="{{tuneNeedValue}}"
+    class="tune-value-row"
+  >
+    <text class="form-label">定音技数值</text>
+    <input
+      class="form-input"
+      type="digit"
+      placeholder="请输入数值"
+      value="{{newEquipment.tuneSkillValue}}"
+      bindinput="onInputTuneValue"
+    />
+  </view>
+</view>
+
+    <!-- 操作按钮 -->
+    <view class="dialog-actions">
+      <button class="dialog-btn dialog-btn-cancel" bindtap="closeDialog">取消</button>
+      <button class="dialog-btn dialog-btn-confirm" bindtap="saveEquipment">保存装备</button>
+    </view>
+
+  </view>
+</view>
+
+<view wx:if="{{showCalibrationDialog}}" class="dialog-mask" bindtap="closeDialog">
+  <view class="dialog-box calibration-dialog-box" catchtap="noop">
+
+    <!-- 标题栏 -->
+    <view class="dialog-header">
+      <text class="dialog-title">校准基础面板</text>
+      <view class="dialog-close" bindtap="closeDialog">✕</view>
+    </view>
+
+    <text class="calibration-tip">请选择当前面板对应的8件装备</text>
+
+    <!-- 装备选择列表 -->
+    <view class="calibration-list">
+      <view
+        wx:for="{{slots}}"
+        wx:key="key"
+        class="calibration-row"
+        bindtap="onSelectCalibrationEquip"
+        data-slot="{{item.key}}"
+      >
+        <view class="calibration-row-left">
+          <text class="calibration-slot-name">{{item.name}}</text>
+        </view>
+        <view class="calibration-row-right">
+          <text class="calibration-equip-name {{calibrationEquipments[item.key] ? 'selected' : 'unselected'}}">
+            {{calibrationEquipments[item.key] ? calibrationEquipments[item.key].name : '点击选择'}}
+          </text>
+          <text class="calibration-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="dialog-actions">
+  <view class="dialog-btn dialog-btn-cancel" catchtap="closeDialog">取消</view>
+  <view class="dialog-btn dialog-btn-confirm" catchtap="doCalibration">确定校准</view>
+</view>
+
+  </view>
+</view>
+<!-- 遍历结果弹窗 -->
+<view wx:if="{{showTraverseResult}}" class="dialog-mask" bindtap="closeTraverseResult">
+  <view class="dialog-box traverse-result-box" catchtap="noop">
+
+    <view class="dialog-header">
+      <text class="dialog-title">最优装备搭配</text>
+      <view class="dialog-close" bindtap="closeTraverseResult">✕</view>
+    </view>
+
+    <!-- 总评分卡片 -->
+    <view class="traverse-summary-card">
+      <view class="traverse-summary-item">
+        <text class="traverse-summary-label">毕业度</text>
+        <text class="traverse-summary-value traverse-highlight">{{traverseResult.graduateRate}}</text>
+      </view>
+      <view class="traverse-summary-divider"></view>
+      <view class="traverse-summary-item">
+        <text class="traverse-summary-label">DPS</text>
+        <text class="traverse-summary-value">{{traverseResult.dps}}</text>
+      </view>
+    </view>
+
+    <!-- 各部位最优装备 -->
+    <scroll-view scroll-y class="traverse-combo-scroll">
+      <view
+        wx:for="{{traverseResult.combo}}"
+        wx:key="slot"
+        class="equip-card"
+        style="margin-bottom:16rpx;"
+      >
+        <view class="equip-card-left">
+          <!-- 名称 + 部位标签 -->
+          <view class="equip-card-title-row">
+            <text class="equip-card-name">{{item.equipName}}</text>
+            <text class="equip-card-slot-tag">{{item.slotName}}</text>
+          </view>
+          <!-- 词条列表 -->
+          <view wx:for="{{item.affixes}}" wx:for-item="affix" wx:key="index">
+            <view wx:if="{{!affix.isNA}}" class="detail-affix-row">
+              <text class="detail-affix-name">{{affix.name}}</text>
+              <text class="detail-affix-value">{{affix.displayValue}}{{affix.isPercent ? '%' : ''}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 底部按钮 -->
+    <view class="dialog-actions">
+      <view class="dialog-btn dialog-btn-cancel" catchtap="closeTraverseResult">关闭</view>
+<view class="dialog-btn dialog-btn-confirm" catchtap="applyTraverseResult">填充至面板</view>
+    </view>
+
+  </view>
+</view>
+</view>
