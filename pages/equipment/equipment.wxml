@@ -104,6 +104,7 @@
       <view class="equip-card-meta-row">
         <text class="equip-card-meta">{{item.qualityName}}</text>
         <text class="equip-card-meta">Lv.{{item.level}}</text>
+        <text class="equip-card-score">评分 {{item.scoreText}}</text>
       </view>
       <view class="equip-card-affix-row">
         <text class="equip-card-affix-label">词条：</text>
@@ -133,6 +134,16 @@
         <text class="detail-label">名称</text>
         <text class="detail-value">{{detailEquipment.name}}</text>
       </view>
+      <view class="detail-score-card">
+        <view class="detail-score-item">
+          <text class="detail-score-label">装备评分</text>
+          <text class="detail-score-value">{{detailEquipment.scoreText}}</text>
+        </view>
+        <view class="detail-score-item">
+          <text class="detail-score-label">预计DPS</text>
+          <text class="detail-score-value">{{detailEquipment.projectedDpsText}}</text>
+        </view>
+      </view>
       <view class="detail-row">
         <text class="detail-label">部位</text>
         <text class="detail-value">{{detailEquipment.slotName}}</text>
@@ -156,9 +167,12 @@
         class="detail-affix-row"
       >
         <text class="detail-affix-name">{{item.name}}</text>
-        <text class="detail-affix-value" wx:if="{{!item.isNA}}">
-          {{item.isPercent ? item.value * 100 : item.value}}{{item.isPercent ? '%' : ''}}
-        </text>
+        <view class="detail-affix-right" wx:if="{{!item.isNA}}">
+          <text class="detail-affix-value">
+            {{item.displayValue}}
+          </text>
+          <text class="detail-affix-score">评分 {{item.scoreText}}</text>
+        </view>
         <text class="detail-affix-value affix-na" wx:else>—</text>
       </view>
       <view wx:if="{{detailEquipment.affixes.length === 0}}">
@@ -221,6 +235,7 @@
   <button class="action-btn btn-clear" bindtap="handleClearAll">清空装备</button>
   <button class="action-btn btn-calibrate" bindtap="openCalibrationDialog">校准面板</button>
   <button class="action-btn btn-traverse" bindtap="handleTraverse">开始遍历</button>
+  <button class="action-btn btn-score" bindtap="validateEquipmentScores">验证评分</button>
 </view>
 
   <!-- 添加装备弹窗 -->
@@ -305,7 +320,7 @@
     >
       <text class="selected-affix-name">{{item.name}}</text>
       <text class="selected-affix-value" wx:if="{{!item.isNA}}">
-       {{item.isPercent ? item.value * 100 : item.value}}{{item.isPercent ? '%' : ''}}
+       {{item.displayValue}}
       </text>
      <text class="selected-affix-value affix-na" wx:else>—</text>
       <view class="affix-remove" bindtap="removeAffix" data-name="{{item.name}}">✕</view>
@@ -512,7 +527,7 @@
           <view wx:for="{{item.affixes}}" wx:for-item="affix" wx:key="index">
             <view wx:if="{{!affix.isNA}}" class="detail-affix-row">
               <text class="detail-affix-name">{{affix.name}}</text>
-              <text class="detail-affix-value">{{affix.displayValue}}{{affix.isPercent ? '%' : ''}}</text>
+              <text class="detail-affix-value">{{affix.displayValue}}</text>
             </view>
           </view>
         </view>

@@ -1,15 +1,16 @@
 import { createStoreBindings } from 'mobx-miniprogram-bindings';
-import { equipmentAffixList } from '../../data/EquipmentAffixs';
-const Schools = require('../../data/schools');
 const { createCalculator } = require('../../utils/calculator');
-const { setMap }           = require('../../data/Sets.js');
-const { bonusList }        = require('../../data/Bonuses.js');
-const skills               = require('../../data/skills.js');
+const { getGameData, getLocalGameData } = require('../../utils/cloudData');
 const app = getApp()
 const { calcStore } = require('../../store/calcStore');
 
-const bonusMap = {};
-bonusList.forEach(b => { bonusMap[b.name] = b; });
+const localGameData = getLocalGameData();
+let Schools = localGameData.schools;
+let equipmentAffixList = localGameData.equipmentAffixList;
+let setMap = localGameData.setMap;
+let bonusList = localGameData.bonusList;
+let bonusMap = localGameData.bonusMap;
+let skills = localGameData.skills;
 
 const PANEL_FIELD_NAMES = {
   physicalMinAttack:   '最小外功攻击',
@@ -118,6 +119,7 @@ const QUALITY_NAME_MAP = {
   purple: '紫色'
 };
 
+const DEFAULT_EQUIPMENT_LEVEL = 91;
 const ARMOR_SLOTS = ['hat', 'chest', 'leg', 'wrist'];
 const BASE_SLOTS = ['leftWeapon', 'rightWeapon', 'ring', 'pendant'];
 
@@ -344,6 +346,205 @@ function applyComboToForm(combo, baseForm, tuneSkillMap) {
   return finalForm;
 }
 
+function normalizeScoreForm(form) {
+  const result = {};
+  Object.keys(form || {}).forEach(key => {
+    const n = parseFloat(form[key]);
+    if (isNaN(n) || n === 0) {
+      result[key] = '';
+    } else {
+      result[key] = String(Math.round((n + Number.EPSILON) * 10000) / 10000);
+    }
+  });
+  return result;
+}
+
+function cleanDisplayNumber(num, digits = 4) {
+  const n = parseFloat(num);
+  if (isNaN(n)) return '0';
+  const factor = Math.pow(10, digits);
+  const rounded = Math.round((n + Number.EPSILON) * factor) / factor;
+  return String(Object.is(rounded, -0) ? 0 : rounded);
+}
+
+function formatAffixDisplayValue(affix) {
+  if (!affix || affix.isNA) return 'N/A';
+  const value = parseFloat(affix.value) || 0;
+  return affix.isPercent
+    ? `${cleanDisplayNumber(value * 100, 4)}%`
+    : cleanDisplayNumber(value, 4);
+}
+
+function normalizeEquipmentAffixDisplay(equipment) {
+  return {
+    ...equipment,
+    affixes: (equipment.affixes || []).map(affix => ({
+      ...affix,
+      displayValue: formatAffixDisplayValue(affix),
+    })),
+  };
+}
+
+function createEquipmentScoreContext(snapshot, basePanel) {
+  if (!snapshot || !basePanel || Object.keys(basePanel).length === 0) return null;
+  if (!snapshot.currentAxis || !snapshot.currentAxis.axisName) return null;
+  if (!snapshot.currentSchool || !snapshot.currentSchool.schoolName) return null;
+
+  const tuneSkillMap = buildTuneSkillMap(snapshot.currentSchool);
+  const baseForm = normalizeScoreForm(basePanel);
+  const calcContext = {
+    form: baseForm,
+    currentSchool: snapshot.currentSchool,
+    currentTarget: snapshot.currentTarget,
+    currentSkill: snapshot.currentSkill,
+    currentAxis: snapshot.currentAxis,
+    selectedSet: snapshot.selectedSet,
+    selectedMentalities: snapshot.selectedMentalities,
+    selectedTiangong: snapshot.selectedTiangong,
+    selectedFood: snapshot.selectedFood,
+    setMap,
+    bonusMap,
+    skills,
+  };
+  const calc = createCalculator(calcContext);
+  const baseDps = calc.calculateDpsWithForm(baseForm);
+  if (!baseDps || baseDps <= 0) return null;
+
+  return { baseForm, baseDps, calcContext, tuneSkillMap };
+}
+
+function normalizeCalcSnapshot(snapshot) {
+  if (snapshot && snapshot.context) {
+    return {
+      selectedMentalities: snapshot.context.selectedMentalities || [],
+      selectedTiangong: snapshot.context.selectedTiangong || '',
+      selectedFood: snapshot.context.selectedFood || '',
+      currentAxis: snapshot.context.currentAxis || null,
+      currentSchool: snapshot.context.currentSchool || {},
+      currentTarget: snapshot.context.currentTarget || {},
+      selectedSet: snapshot.context.selectedSet || '',
+      currentSkill: snapshot.context.currentSkill || null,
+    };
+  }
+  return snapshot || null;
+}
+
+function calculateDpsForAffixes(scoreContext, equipment, affixes) {
+  const scoreEquip = {
+    slot: equipment.slot,
+    affixes: affixes || [],
+    baseAttrs: {},
+    tuneSkill: null,
+  };
+  const rawForm = applyComboToForm([scoreEquip], scoreContext.baseForm, scoreContext.tuneSkillMap);
+  const overrideForm = normalizeScoreForm(rawForm);
+  const calc = createCalculator({ ...scoreContext.calcContext, form: overrideForm });
+  return calc.calculateDpsWithForm(overrideForm) || scoreContext.baseDps;
+}
+
+function formatEquipmentScore(score) {
+  const n = parseFloat(score);
+  if (!n || n <= 0) return '0.00';
+  return n.toFixed(2);
+}
+
+function stripEquipmentScoreFields(equipment) {
+  const {
+    score,
+    scoreText,
+    projectedDps,
+    projectedDpsText,
+    scoreReady,
+    affixNames,
+    slotName,
+    qualityName,
+    _index,
+    ...cleanEquipment
+  } = equipment || {};
+  cleanEquipment.affixes = (cleanEquipment.affixes || []).map((affix) => {
+    const {
+      score,
+      scoreText,
+      displayValue,
+      _scoreIndex,
+      ...cleanAffix
+    } = affix || {};
+    return cleanAffix;
+  });
+  return cleanEquipment;
+}
+
+function scoreEquipment(equipment, scoreContext) {
+  const affixes = (equipment.affixes || []).map((affix, index) => ({ ...affix, _scoreIndex: index }));
+  const activeAffixes = affixes.filter(affix => !affix.isNA);
+  if (!scoreContext || activeAffixes.length === 0) {
+    return {
+      score: 0,
+      scoreText: scoreContext ? '0.00' : '--',
+      projectedDps: scoreContext ? scoreContext.baseDps : 0,
+      projectedDpsText: scoreContext ? scoreContext.baseDps.toFixed(2) : '--',
+      affixes: affixes.map(affix => ({ ...affix, score: 0, scoreText: scoreContext ? '0.00' : '--' })),
+    };
+  }
+
+  const fullDps = calculateDpsForAffixes(scoreContext, equipment, activeAffixes);
+  const equipmentScore = Math.max(0, fullDps - scoreContext.baseDps);
+
+  const rawAffixScores = activeAffixes.map((affix) => {
+    const withoutAffixes = activeAffixes.filter(item => item._scoreIndex !== affix._scoreIndex);
+    const dpsWithout = calculateDpsForAffixes(scoreContext, equipment, withoutAffixes);
+    return {
+      index: affix._scoreIndex,
+      rawScore: Math.max(0, fullDps - dpsWithout),
+    };
+  });
+  const rawTotal = rawAffixScores.reduce((sum, item) => sum + item.rawScore, 0);
+  const scoreMap = {};
+  rawAffixScores.forEach(item => {
+    scoreMap[item.index] = rawTotal > 0
+      ? equipmentScore * item.rawScore / rawTotal
+      : equipmentScore / activeAffixes.length;
+  });
+
+  return {
+    score: equipmentScore,
+    scoreText: formatEquipmentScore(equipmentScore),
+    projectedDps: fullDps,
+    projectedDpsText: fullDps > 0 ? fullDps.toFixed(2) : '--',
+    affixes: affixes.map(affix => {
+      const score = affix.isNA ? 0 : (scoreMap[affix._scoreIndex] || 0);
+      return {
+        ...affix,
+        score,
+        scoreText: scoreContext ? formatEquipmentScore(score) : '--',
+      };
+    }),
+  };
+}
+
+function validateScoreOrder(scoredList) {
+  const list = (scoredList || [])
+    .filter(item => item.scoreReady)
+    .map(item => ({
+      name: item.name,
+      score: parseFloat(item.score) || 0,
+      projectedDps: parseFloat(item.projectedDps) || 0,
+    }));
+  for (let i = 0; i < list.length; i += 1) {
+    for (let j = i + 1; j < list.length; j += 1) {
+      const a = list[i];
+      const b = list[j];
+      if (a.score > b.score && a.projectedDps < b.projectedDps) {
+        return { passed: false, message: `${a.name} > ${b.name}` };
+      }
+      if (b.score > a.score && b.projectedDps < a.projectedDps) {
+        return { passed: false, message: `${b.name} > ${a.name}` };
+      }
+    }
+  }
+  return { passed: true, message: list.length ? `已验证 ${list.length} 件装备` : '暂无可验证装备' };
+}
+
 /**
  * 将一件装备的所有词条叠加到 form 上，返回新 form
  * @param {object} equipment - 装备对象，含 affixes 数组
@@ -465,14 +666,14 @@ Page({
       name: '',
       slot: 'leftWeapon',
       quality: 'gold',
-      level: 86,
+      level: DEFAULT_EQUIPMENT_LEVEL,
       baseAttrs: {},
       affixes: [],
       tuneSkill: null
     },
 
     qualityOptions: ['紫色', '金色'],
-    levelOptions: [81, 86],
+    levelOptions: [81, 86, 91],
 
     showAffixPicker: false,
     currentTuneSkills: [],
@@ -487,6 +688,7 @@ Page({
     showDetailDialog: false,
     detailEquipment: null,
     basePanelDisplay: [],
+    scoreStatusText: '',
 
     isEditing: false,
     editingIndex: -1,
@@ -504,8 +706,6 @@ Page({
 
   onLoad() {
     this.loadData();
-    this.loadCurrentSchool();
-    this.updateFilteredList();
     this._storeBindings = createStoreBindings(this, {
       store: app.equipmentStore,
       fields: [
@@ -525,6 +725,28 @@ Page({
         'setBasePanel',
         'setCurrentSchool'
       ]
+    });
+    getGameData().then(gameData => {
+      this.applyGameData(gameData);
+      this.loadCurrentSchool();
+      this.updateFilteredList();
+    });
+  },
+
+  onShow() {
+    this.updateFilteredList();
+  },
+
+  applyGameData(gameData) {
+    Schools = gameData.schools || Schools;
+    equipmentAffixList = gameData.equipmentAffixList || equipmentAffixList;
+    setMap = gameData.setMap || setMap;
+    bonusList = gameData.bonusList || bonusList;
+    bonusMap = gameData.bonusMap || bonusMap;
+    skills = gameData.skills || skills;
+
+    this.setData({
+      affixList: equipmentAffixList,
     });
   },
 
@@ -689,6 +911,7 @@ confirmAddAffix() {
     isPercent: tempAffix.isPercent,
     isNA:      false,
   });
+  affixes[affixes.length - 1].displayValue = formatAffixDisplayValue(affixes[affixes.length - 1]);
   this.setData({
     'newEquipment.affixes': affixes,
     showAffixPicker: false,
@@ -753,8 +976,20 @@ confirmAddAffix() {
 
   updateFilteredList() {
     const { filterSlot } = this.data;
-    const list = app.equipmentStore.equipmentList.map(eq => ({
-      ...eq,
+    const session = calcStore.getCalcSession && calcStore.getCalcSession();
+    const snapshot = normalizeCalcSnapshot(
+      this.data.calcContextSnapshot
+      || app.equipmentStore.calcContextSnapshot
+      || session
+    );
+    const basePanel = this.data.basePanel || app.equipmentStore.basePanel || session?.panelInput;
+    const scoreContext = createEquipmentScoreContext(snapshot, basePanel);
+    const list = app.equipmentStore.equipmentList.map(eq => {
+      const displayEquip = normalizeEquipmentAffixDisplay(eq);
+      return {
+      ...displayEquip,
+      ...scoreEquipment(displayEquip, scoreContext),
+      scoreReady: !!scoreContext,
       slotName: SLOT_NAME_MAP[eq.slot] ?? eq.slot,
       qualityName: QUALITY_NAME_MAP[eq.quality] ?? eq.quality,
       affixNames: (eq.affixes ?? [])
@@ -762,11 +997,16 @@ confirmAddAffix() {
         .map(a => a.name)
         .slice(0, 5)
         .join(' | ')
-    }));
+    };
+    });
+    const validation = validateScoreOrder(list);
     this.setData({
       filteredList: filterSlot === 'all'
         ? list
-        : list.filter(eq => eq.slot === filterSlot)
+        : list.filter(eq => eq.slot === filterSlot),
+      scoreStatusText: scoreContext
+        ? validation.message
+        : '请先在计算器计算并校准基础面板'
     });
   },
 
@@ -781,9 +1021,10 @@ confirmAddAffix() {
   openAddDialog() {
     const defaultSlot = 'leftWeapon';
     const defaultQuality = 'gold';
-    const defaultLevel = 86;
+    const defaultLevel = DEFAULT_EQUIPMENT_LEVEL;
     const attrs = this.calculateBaseAttack(defaultSlot, defaultQuality, defaultLevel);
     const currentSchool = app.equipmentStore.currentSchool;
+    const levelIndex = this.data.levelOptions.indexOf(defaultLevel);
 
     const allList = app.equipmentStore.equipmentList || [];
     const slotCount = allList.filter(eq => eq.slot === defaultSlot).length;
@@ -795,7 +1036,7 @@ confirmAddAffix() {
       selectedAffixNames: {},
       currentTuneSkills: this.buildTuneSkills(currentSchool, defaultSlot),
       qualityIndex: 1,
-      levelIndex: 1,
+      levelIndex: levelIndex >= 0 ? levelIndex : 1,
       slotIndex: 0,
       newEquipment: {
         name: defaultName,
@@ -1186,6 +1427,7 @@ guessLevelFromOcr(lines) {
     return Number(levelMatch[1])
   }
 
+  if (/91/.test(allText)) return 91
   if (/86/.test(allText)) return 86
   if (/81/.test(allText)) return 81
 
@@ -1623,7 +1865,7 @@ fillOcrEquipmentToDialog(parsed, rawText) {
   const currentSchool = app.equipmentStore.currentSchool
   const slotIndex = SLOTS.findIndex(s => s.key === parsed.slot)
   const qualityIndex = parsed.quality === 'purple' ? 0 : 1
-  const levelIndex = parsed.level === 81 ? 0 : 1
+  const levelIndex = this.data.levelOptions.indexOf(parsed.level)
 
   this.setData({
     ocrRawText: rawText,
@@ -1637,7 +1879,7 @@ fillOcrEquipmentToDialog(parsed, rawText) {
 
     slotIndex: slotIndex >= 0 ? slotIndex : 0,
     qualityIndex,
-    levelIndex,
+    levelIndex: levelIndex >= 0 ? levelIndex : 1,
 
     newEquipmentSlotName: SLOT_NAME_MAP[parsed.slot] || '左武器',
     currentTuneSkills: this.buildTuneSkills(currentSchool, parsed.slot),
@@ -1672,37 +1914,45 @@ fillOcrEquipmentToDialog(parsed, rawText) {
       leftWeapon: {
         gold: {
           81: { '最小外功': 39, '最大外功': 91 },
-          86: { '最小外功': 46, '最大外功': 106 }
+          86: { '最小外功': 46, '最大外功': 106 },
+          91: { '最小外功': 53, '最大外功': 124 }
         },
         purple: {
-          86: { '最小外功': 41, '最大外功': 96 }
+          86: { '最小外功': 41, '最大外功': 96 },
+          91: { '最小外功': 48, '最大外功': 112 }
         }
       },
       rightWeapon: {
         gold: {
           81: { '最小外功': 39, '最大外功': 91 },
-          86: { '最小外功': 46, '最大外功': 106 }
+          86: { '最小外功': 46, '最大外功': 106 },
+          91: { '最小外功': 53, '最大外功': 124 }
         },
         purple: {
-          86: { '最小外功': 41, '最大外功': 96 }
+          86: { '最小外功': 41, '最大外功': 96 },
+          91: { '最小外功': 48, '最大外功': 112 }
         }
       },
       ring: {
         gold: {
           81: { '最小外功': 52 },
-          86: { '最小外功': 61 }
+          86: { '最小外功': 61 },
+          91: { '最小外功': 71 }
         },
         purple: {
-          86: { '最小外功': 55 }
+          86: { '最小外功': 55 },
+          91: { '最小外功': 64 }
         }
       },
       pendant: {
         gold: {
           81: { '最大外功': 78 },
-          86: { '最大外功': 91 }
+          86: { '最大外功': 91 },
+          91: { '最大外功': 106 }
         },
         purple: {
-          86: { '最大外功': 82 }
+          86: { '最大外功': 82 },
+          91: { '最大外功': 96 }
         }
       }
     };
@@ -1764,7 +2014,7 @@ fillOcrEquipmentToDialog(parsed, rawText) {
 
   onChangeLevel(e) {
     const index = Number(e.detail.value);
-    const level = index === 0 ? 81 : 86;
+    const level = this.data.levelOptions[index] || 86;
     const slot = this.data.newEquipment.slot;
     const quality = this.data.newEquipment.quality;
 
@@ -1862,10 +2112,10 @@ removeAffix(e) {
       };
     }
   
-    const equipment = {
+    const equipment = stripEquipmentScoreFields({
       ...newEquipment,
       tuneSkill,
-    };
+    });
   
     if (isEditing) {
       // ★ 使用 updateEquipment，自动同步 selectedEquipment 引用
@@ -1900,6 +2150,7 @@ removeAffix(e) {
       showDetailDialog: true,
       detailEquipment: {
         ...equip,
+        affixes: equip.affixes || [],
         _index: index,
         slotName: SLOT_NAME_MAP[equip.slot] ?? equip.slot,
         qualityName: QUALITY_NAME_MAP[equip.quality] ?? equip.quality,
@@ -1941,7 +2192,8 @@ removeAffix(e) {
   
     // 还原 qualityIndex 和 levelIndex
     const qualityIndex = equip.quality === 'purple' ? 0 : 1;
-    const levelIndex = equip.level === 81 ? 0 : 1;
+    const matchedLevelIndex = this.data.levelOptions.indexOf(equip.level);
+    const levelIndex = matchedLevelIndex >= 0 ? matchedLevelIndex : 1;
     const slotIndex = SLOTS.findIndex(s => s.key === equip.slot);
   
     // 还原 tuneSkill 字符串（存的是对象，取 name）
@@ -1973,6 +2225,15 @@ removeAffix(e) {
 
   togglePanelCollapse() {
     this.setData({ panelCollapsed: !this.data.panelCollapsed });
+  },
+
+  validateEquipmentScores() {
+    const validation = validateScoreOrder(this.data.filteredList);
+    wx.showToast({
+      title: validation.passed ? validation.message : `评分异常：${validation.message}`,
+      icon: 'none',
+      duration: 2500
+    });
   },
 
   // 清空装备
@@ -2458,11 +2719,7 @@ removeAffix(e) {
           affixes: (equip.affixes || []).map(affix => ({
             name: affix.name,
             isNA: affix.isNA,
-            displayValue: affix.isNA
-              ? 'N/A'
-              : affix.isPercent
-                ? (parseFloat(affix.value) * 100).toFixed(1) + '%'
-                : parseFloat(affix.value).toFixed(1),
+            displayValue: formatAffixDisplayValue(affix),
           })),
         })),
         overrideForm: bestOverrideForm ? JSON.parse(JSON.stringify(bestOverrideForm)) : {},
@@ -2484,7 +2741,7 @@ removeAffix(e) {
       return;
     }
 
-    calcStore.batchUpdateForm({ ...overrideForm });
+    calcStore.batchUpdateForm(normalizeScoreForm(overrideForm));
 
     wx.showToast({ title: '已填入计算器面板', icon: 'success' });
     this.closeTraverseResult();

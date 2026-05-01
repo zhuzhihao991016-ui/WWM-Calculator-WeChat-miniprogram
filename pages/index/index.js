@@ -1,14 +1,23 @@
-import { createStoreBindings } from 'mobx-miniprogram-bindings';
+﻿import { createStoreBindings } from 'mobx-miniprogram-bindings';
 import { calcStore } from '../../store/calcStore';
 const app = getApp()
-const targets = require('../../data/targets.js')
-const schools = require('../../data/schools.js')
-const skills  = require('../../data/skills.js')
-const { grandPanelList, grandPanelMap } = require('../../data/GrandPanel.js')
-const { axesList, axesMap, axisNameMap } = require('../../data/Axes.js')
-const { setMap, setList } = require('../../data/Sets.js')
-const { bonusList }       = require('../../data/Bonuses.js')
 const { createCalculator } = require('../../utils/calculator')
+const { getGameData, getLocalGameData } = require('../../utils/cloudData')
+
+const localGameData = getLocalGameData()
+let targets = localGameData.targets
+let schools = localGameData.schools
+let skills = localGameData.skills
+let grandPanelList = localGameData.grandPanelList
+let grandPanelMap = localGameData.grandPanelMap
+let axesList = localGameData.axesList
+let axesMap = localGameData.axesMap
+let axisNameMap = localGameData.axisNameMap
+let setMap = localGameData.setMap
+let setList = localGameData.setList
+let bonusList = localGameData.bonusList
+let bonusMap = localGameData.bonusMap
+let affixList = localGameData.affixList
 
 const AUTO_SAVE_KEY = 'savedConfigs'
 const MANUAL_SAVE_KEY = 'manualSavedConfigs'
@@ -22,10 +31,6 @@ const targetFoundIndex   = targets.findIndex(item => item.targetName === default
 const defaultTargetIndex = targetFoundIndex >= 0 ? targetFoundIndex : 0
 const defaultSchoolIndex = 0
 const defaultSkillIndex  = 0
-
-// 预处理 bonusMap，在模块加载时完成一次即可
-const bonusMap = {}
-bonusList.forEach(b => { bonusMap[b.name] = b })
 
 Page({
   data: {
@@ -244,12 +249,61 @@ Page({
 
     this._shouldSaveOnNextCalculate = false
 
+    getGameData().then(gameData => {
+      this.applyGameData(gameData)
+      this.initCalculatorPage()
+    })
+  },
+
+  applyGameData(gameData) {
+    targets = gameData.targets || targets
+    schools = gameData.schools || schools
+    skills = gameData.skills || skills
+    grandPanelList = gameData.grandPanelList || grandPanelList
+    grandPanelMap = gameData.grandPanelMap || grandPanelMap
+    axesList = gameData.axesList || axesList
+    axesMap = gameData.axesMap || axesMap
+    axisNameMap = gameData.axisNameMap || axisNameMap
+    setMap = gameData.setMap || setMap
+    setList = gameData.setList || setList
+    bonusList = gameData.bonusList || bonusList
+    bonusMap = gameData.bonusMap || bonusMap
+    affixList = gameData.affixList || affixList
+
+    const targetIndex = this.getDefaultTargetIndex()
+    this.setData({
+      axesList,
+      axesMap,
+      axisNameMap,
+      schools,
+      schoolOptions: schools.map(item => item.schoolName),
+      skills,
+      skillOptions: skills.map(item => item.skillName),
+      targets,
+      targetOptions: targets.map(item => item.targetName),
+      targetIndex,
+      grandPanelList,
+      grandPanelMap,
+      setList,
+      setOptions: ['无', ...setList.map(item => item.name)],
+      setIndex: setList.findIndex(item => item.name === '飞隼') + 1,
+    })
+  },
+
+  getDefaultTargetIndex() {
+    const foundIndex = targets.findIndex(item => item.targetName === defaultTargetName)
+    return foundIndex >= 0 ? foundIndex : 0
+  },
+
+  initCalculatorPage() {
+    const targetIndex = this.getDefaultTargetIndex()
+
     const savedConfigs = wx.getStorageSync(AUTO_SAVE_KEY) || []
     const manualSavedConfigs = this.getManualSavedConfigs()
     const lastSavedConfig = wx.getStorageSync(LAST_SAVED_KEY)
 
     const currentSchool = this.buildCurrentSchool(this.data.schools[defaultSchoolIndex])
-    const currentTarget = this.data.targets[defaultTargetIndex] || {}
+    const currentTarget = this.data.targets[targetIndex] || {}
 
     this.updateState('currentSchool', currentSchool)
     this.updateState('currentTarget', currentTarget)
@@ -270,7 +324,7 @@ Page({
       currentSchoolAxesText: this.getAxesText(currentSchool),
       skillIndex:           defaultSkillIndex,
       currentSkill:         this.data.skills[defaultSkillIndex] || {},
-      targetIndex:          defaultTargetIndex,
+      targetIndex,
       selectedMentalities:  [],
       selectedMentalitiesText: '无',
       selectedTiangong:     '火',
@@ -797,7 +851,6 @@ Page({
     const baseDps       = axisRawResult.rawDps
     const form          = this.data.form
     const currentSchool = this.data.currentSchool || {}
-    const { affixList } = require('../../data/Affixs')
     // 使用一个临时计算器实例来访问 buildOverrideForm / calculateDpsWithForm
     const calc = this._buildCalc()
     const rows = []
@@ -1033,9 +1086,10 @@ Page({
   },
 
   resetForm() {
+    const targetIndex = this.getDefaultTargetIndex()
     const defaultSchool = this.buildCurrentSchool(this.data.schools[defaultSchoolIndex])
     this.updateState('currentSchool', defaultSchool)
-    this.updateState('currentTarget', this.data.targets[defaultTargetIndex] || {})
+    this.updateState('currentTarget', this.data.targets[targetIndex] || {})
     this.updateState('selectedSet', '飞隼')
 
     const emptyForm = {
@@ -1062,7 +1116,7 @@ Page({
       currentGrandPanel:     this.data.grandPanelMap[defaultSchool.schoolName] || null,
       skillIndex:            defaultSkillIndex,
       currentSkill:          this.data.skills[defaultSkillIndex] || {},
-      targetIndex:           defaultTargetIndex,
+      targetIndex,
       selectedMentalities:   [],
       selectedMentalitiesText: '无',
       mentalityDisplayList:  [],

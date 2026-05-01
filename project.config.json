@@ -19,6 +19,10 @@
     },
     {
       "type": "file",
+      "value": "data/cloud-game-data.json"
+    },
+    {
+      "type": "file",
       "value": "package.json"
     },
     {

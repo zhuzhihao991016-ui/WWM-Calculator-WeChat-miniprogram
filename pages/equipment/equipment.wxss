@@ -283,12 +283,13 @@ page {
   right: 24rpx;
   bottom: 84rpx;
   display: flex;
+  flex-wrap: wrap;
   gap: 16rpx;
   z-index: 20;
 }
 
 .action-btn {
-  flex: 1;
+  flex: 1 1 30%;
   height: 72rpx;
   border-radius: 18rpx;
   font-size: 26rpx;
@@ -324,9 +325,15 @@ page {
   box-shadow: 0 10rpx 24rpx rgba(22, 119, 255, 0.24);
 }
 
+.btn-score {
+  background: #0f9f6e;
+  color: #ffffff;
+  box-shadow: 0 10rpx 24rpx rgba(15, 159, 110, 0.2);
+}
+
 /* 底部留白，避免内容被固定栏遮住 */
 .container {
-  padding-bottom: 220rpx;
+  padding-bottom: 300rpx;
 }
 
 /* 遮罩 */
@@ -745,6 +752,14 @@ page {
   color: #8a94a6;
 }
 
+.equip-card-score {
+  font-size: 24rpx;
+  color: #0f9f6e;
+  background: rgba(15, 159, 110, 0.1);
+  border-radius: 8rpx;
+  padding: 0 10rpx;
+}
+
 .equip-card-affix-row {
   display: flex;
   flex-direction: row;
@@ -800,6 +815,34 @@ page {
   font-size: 28rpx;
   color: #1a2233;
   font-weight: 600;
+}
+
+.detail-score-card {
+  display: flex;
+  gap: 16rpx;
+  padding: 16rpx 0;
+}
+
+.detail-score-item {
+  flex: 1;
+  background: #f6faf8;
+  border: 1rpx solid #d8f0e5;
+  border-radius: 12rpx;
+  padding: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.detail-score-label {
+  font-size: 22rpx;
+  color: #64748b;
+}
+
+.detail-score-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #0f9f6e;
 }
 
 .detail-affix-row {
@@ -908,6 +951,19 @@ page {
   font-weight: 600;
   text-align: right;
   min-width: 100rpx;
+}
+
+.detail-affix-right {
+  min-width: 160rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4rpx;
+}
+
+.detail-affix-score {
+  font-size: 22rpx;
+  color: #0f9f6e;
 }
 
 /* 新增弹窗已选词条行同高对齐 */
