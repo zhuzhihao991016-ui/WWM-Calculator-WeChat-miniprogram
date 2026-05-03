@@ -50,6 +50,11 @@ page {
   font-weight: 600;
 }
 
+.result-equipment-link {
+  margin-top: 12rpx;
+  color: #0f9f6e;
+}
+
 .group-title {
   font-size: 26rpx;
   font-weight: 700;
@@ -442,6 +447,11 @@ page {
   filter: none;
 }
 
+.detail-section-head {
+  margin-top: 20rpx;
+  margin-bottom: 12rpx;
+}
+
 /* ===== 回到顶部按钮 ===== */
 .scroll-top-btn {
   position: fixed;
@@ -730,6 +740,35 @@ page {
   text-overflow: ellipsis;
 }
 
+.other-entry-row {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #eef2f7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.other-entry-title {
+  font-size: 30rpx;
+  color: #1f2329;
+  font-weight: 700;
+  margin-bottom: 6rpx;
+}
+
+.other-entry-desc {
+  font-size: 24rpx;
+  color: #8a8f99;
+}
+
+.other-entry-arrow {
+  flex: 0 0 auto;
+  font-size: 42rpx;
+  color: #9ca3af;
+  line-height: 1;
+}
+
 .other-config-time {
   font-size: 22rpx;
   color: #9ca3af;
@@ -812,10 +851,14 @@ page {
 .detail-card {
   background: #ffffff;
   border-radius: 24rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 16rpx;
   box-shadow: 0 8rpx 28rpx rgba(31, 35, 41, 0.06);
   position: relative;
+}
+
+.detail-card-expanded {
+  box-shadow: 0 10rpx 32rpx rgba(22, 119, 255, 0.12);
 }
 
 /* 技能序号角标 */
@@ -833,21 +876,84 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16rpx;
   margin-bottom: 16rpx;
-  padding-bottom: 16rpx;
-  border-bottom: 1rpx solid #eef2f7;
+}
+
+.detail-title-wrap {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
 }
 
 .detail-name {
   font-size: 30rpx;
   font-weight: 700;
   color: #1677ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detail-count {
   font-size: 26rpx;
   color: #9ca3af;
   font-weight: 500;
+  flex: 0 0 auto;
+}
+
+.detail-toggle {
+  flex: 0 0 auto;
+  min-width: 104rpx;
+  height: 48rpx;
+  padding: 0 14rpx;
+  border-radius: 24rpx;
+  background: #eef6ff;
+  color: #1677ff;
+  font-size: 24rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  box-sizing: border-box;
+}
+
+.detail-toggle-icon {
+  font-size: 22rpx;
+  line-height: 1;
+}
+
+.detail-summary-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12rpx;
+}
+
+.detail-summary-pill {
+  min-width: 0;
+  background: #f5f7fb;
+  border-radius: 12rpx;
+  padding: 12rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.detail-summary-label {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+.detail-summary-value {
+  font-size: 24rpx;
+  color: #1f2329;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 技能数据网格 */
@@ -855,6 +961,9 @@ page {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #eef2f7;
 }
 
 .detail-grid-item {
@@ -929,6 +1038,13 @@ page {
 .improve-table-body {
   border-radius: 0 0 16rpx 16rpx;
   overflow: hidden;
+}
+
+.improve-empty {
+  background: #ffffff;
+  border-radius: 0 0 16rpx 16rpx;
+  padding: 28rpx 24rpx;
+  margin-bottom: 20rpx;
 }
 
 /* 数据行 */
@@ -1117,4 +1233,306 @@ page {
 
 .manual-config-item {
   min-height: 132rpx;
+}
+
+/* ===== Image-2 UI refresh: calculator workspace ===== */
+page {
+  background: #f3f1ea;
+  color: #17201f;
+}
+
+.container {
+  padding: 28rpx 24rpx 292rpx;
+  background: linear-gradient(180deg, #eeece4 0%, #f8f7f3 360rpx, #f8f7f3 100%);
+  min-height: 100vh;
+}
+
+.page-title {
+  text-align: left;
+  font-size: 42rpx;
+  line-height: 1.2;
+  color: #17201f;
+  margin: 8rpx 0 24rpx;
+  letter-spacing: 0;
+}
+
+.card,
+.other-block,
+.detail-card {
+  border-radius: 16rpx;
+  box-shadow: 0 10rpx 30rpx rgba(36, 32, 21, 0.07);
+  border: 1rpx solid rgba(36, 32, 21, 0.06);
+}
+
+.card {
+  padding: 26rpx 24rpx;
+  margin-bottom: 18rpx;
+  background: #fffdf8;
+}
+
+.section-title,
+.other-block-title,
+.flow-title {
+  color: #17201f;
+  letter-spacing: 0;
+}
+
+.section-title::before,
+.other-block-title::before {
+  content: "";
+  display: inline-block;
+  width: 8rpx;
+  height: 24rpx;
+  margin-right: 12rpx;
+  border-radius: 4rpx;
+  background: #0f766e;
+  vertical-align: -3rpx;
+}
+
+.section-action,
+.expand-btn,
+.result-equipment-link {
+  color: #0f766e;
+}
+
+.group-title {
+  border-left-color: #c98a2c;
+  color: #31403f;
+  letter-spacing: 0;
+}
+
+.result-card {
+  background: #103b36;
+  border-color: #103b36;
+  color: #f8f4e8;
+  box-shadow: 0 16rpx 36rpx rgba(15, 61, 54, 0.2);
+}
+
+.result-title,
+.result-sub,
+.result-card .summary-label,
+.result-card .detail-title {
+  color: rgba(248, 244, 232, 0.72);
+}
+
+.result-number {
+  color: #f4b04e;
+  font-size: 60rpx;
+}
+
+.result-tag {
+  background: rgba(255, 255, 255, 0.11);
+  color: #f8f4e8;
+}
+
+.result-card .expand-btn {
+  background: rgba(255, 255, 255, 0.11);
+  color: #ffffff;
+}
+
+.result-card .summary-value {
+  color: #ffffff;
+}
+
+.picker-row,
+.form-item {
+  min-height: 86rpx;
+  border-bottom-color: #ebe5d8;
+}
+
+.picker-label,
+.label {
+  color: #465451;
+}
+
+.picker-value,
+.summary-value {
+  color: #17201f;
+}
+
+.input {
+  background: #f5f1e8;
+  border: 1rpx solid #e7decd;
+  border-radius: 12rpx;
+  color: #17201f;
+}
+
+.mentality-item {
+  border-radius: 12rpx;
+}
+
+.mentality-item.is-unselected {
+  background: #f6f1e7;
+  border-color: #e2d8c8;
+  color: #31403f;
+}
+
+.mentality-item.is-selected {
+  background: #0f766e;
+  border-color: #0f766e;
+}
+
+.gp-element-block,
+.detail-summary-item,
+.detail-summary-pill,
+.detail-grid-item,
+.mini-card {
+  background: #f6f1e7;
+  border-radius: 12rpx;
+}
+
+.gp-element-title,
+.detail-name,
+.detail-summary-value.highlight,
+.improve-highlight,
+.gp-element-value {
+  color: #0f766e;
+}
+
+.action-bar {
+  left: 20rpx;
+  right: 20rpx;
+  bottom: 118rpx;
+  padding: 14rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 253, 248, 0.94);
+  border: 1rpx solid rgba(36, 32, 21, 0.08);
+  box-shadow: 0 12rpx 34rpx rgba(36, 32, 21, 0.13);
+}
+
+.calc-btn,
+.reset-btn,
+.grand-panel-btn,
+.update-btn {
+  border-radius: 14rpx;
+}
+
+.calc-btn,
+.grand-panel-btn,
+.update-btn {
+  background: #0f766e;
+  box-shadow: 0 10rpx 24rpx rgba(15, 118, 110, 0.22);
+}
+
+.reset-btn {
+  background: #f5f1e8;
+  color: #465451;
+  border-color: #e1d8c9;
+}
+
+.tab-bar {
+  height: 112rpx;
+  background: #fffdf8;
+  border-top-color: #e6ded1;
+  box-shadow: 0 -8rpx 28rpx rgba(36, 32, 21, 0.08);
+}
+
+.tab-icon {
+  font-size: 34rpx;
+}
+
+.tab-label {
+  color: #7d837f;
+}
+
+.tab-active .tab-label {
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.scroll-top-btn,
+.manual-save-btn {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 10rpx 24rpx rgba(36, 32, 21, 0.16);
+}
+
+.scroll-top-btn {
+  background: #0f766e;
+}
+
+.manual-save-btn {
+  background: #c98a2c;
+}
+
+.other-container,
+.detail-container {
+  margin-top: 0;
+  padding: 0;
+}
+
+.other-block,
+.detail-card {
+  background: #fffdf8;
+}
+
+.detail-toggle,
+.other-btn-load {
+  background: #e7f3ef;
+  color: #0f766e;
+}
+
+.other-btn-delete {
+  background: #fbeceb;
+  color: #c24135;
+}
+
+.improve-table-header {
+  background: #e9e2d4;
+  border-radius: 16rpx 16rpx 0 0;
+}
+
+.improve-row-even {
+  background: #fffdf8;
+}
+
+.improve-row-odd {
+  background: #f7f2e9;
+}
+
+.advice-info {
+  background: #e7f3ef;
+  border-left-color: #0f766e;
+}
+
+.advice-warn {
+  background: #fff4de;
+  border-left-color: #c98a2c;
+}
+
+/* ===== UI spacing refinement ===== */
+.container {
+  padding-top: 8rpx;
+}
+
+.page-title {
+  text-align: center;
+  margin: 0 0 20rpx;
+  font-size: 42rpx;
+  line-height: 1.18;
+  font-weight: 800;
+  color: #173b37;
+  letter-spacing: 0;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-all;
+}
+
+.page-title-compact {
+  margin-bottom: 18rpx;
+  font-size: 44rpx;
+}
+
+.detail-container,
+.other-container {
+  padding: 8rpx 24rpx 292rpx;
+  box-sizing: border-box;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eeece4 0%, #f8f7f3 360rpx, #f8f7f3 100%);
+}
+
+.detail-container > .other-block:first-child,
+.other-container > .other-block:first-child {
+  margin-top: 0;
 }

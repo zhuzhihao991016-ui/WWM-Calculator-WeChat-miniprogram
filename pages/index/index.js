@@ -82,6 +82,7 @@ Page({
       currentTab: 'panel',
       showPanelAnalysis: true,
     },
+    expandedSkillMap: {},
 
     savedConfigs: [],
     manualSavedConfigs: [null, null, null],
@@ -116,6 +117,14 @@ Page({
 
     this.setData({
       showUpdatePopup: false
+    })
+  },
+
+  openUpdatePopup() {
+    this.setData({
+      showUpdatePopup: true,
+      updateLogVersion: app.globalData.updateLogVersion,
+      updateLogContent: app.globalData.updateLogContent || []
     })
   },
 
@@ -466,7 +475,31 @@ Page({
     })
   },
 
-  handleTabChange(e) { this.setData({ 'ui.currentTab': e.currentTarget.dataset.tab }) },
+  handleTabChange(e) {
+    const tab = e.currentTarget.dataset.tab
+    this.setData({ 'ui.currentTab': tab }, () => {
+      wx.pageScrollTo({ scrollTop: 0, duration: 0 })
+      if (tab === 'detail') {
+        this.refreshImproveAnalysis()
+      }
+    })
+  },
+
+  refreshImproveAnalysis() {
+    const { axisRawResult } = this.calculate()
+    this.buildImproveList(axisRawResult)
+    this.buildPanelAdvice()
+    this.setData({ expandedSkillMap: {} })
+  },
+
+  toggleSkillDetail(e) {
+    const index = e.currentTarget.dataset.index
+    if (index === undefined || index === null) return
+    const key = String(index)
+    const expandedSkillMap = { ...(this.data.expandedSkillMap || {}) }
+    expandedSkillMap[key] = !expandedSkillMap[key]
+    this.setData({ expandedSkillMap })
+  },
 
   handleScrollToTop() { wx.pageScrollTo({ scrollTop: 0, duration: 300 }) },
 

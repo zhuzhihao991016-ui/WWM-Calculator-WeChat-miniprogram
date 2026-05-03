@@ -1,4 +1,4 @@
-<view class="container">
+<view wx:if="{{ui.currentTab === 'panel'}}" class="container">
   <view class="page-title">国际服全流派毕业度计算器</view>
 
   <!-- ===== 面板页 ===== -->
@@ -22,6 +22,9 @@
 
     <view class="expand-btn" bindtap="toggleResultDetail">
       {{ui.showResultDetail ? '收起轴详细结果' : '展开轴详细结果'}}
+    </view>
+    <view class="expand-btn result-equipment-link" bindtap="navigateToEquipment">
+      去装备库校准 / 遍历搭配
     </view>
 
     <view class="detail-panel" wx:if="{{ui.showResultDetail}}">
@@ -726,22 +729,6 @@
   <input class="input" type="digit" value="{{form.martialBoostValue2}}" data-field="martialBoostValue2" bindinput="handleInput" placeholder="如 4.4" />
 </view>
   </view>
-  <!-- 更新日志弹窗 -->
-  <view wx:if="{{showUpdatePopup}}" class="update-mask">
-    <view class="update-popup">
-      <view class="update-title">更新日志</view>
-      <view class="update-version">版本 {{updateLogVersion}}</view>
-
-      <view class="update-content">
-        <view wx:for="{{updateLogContent}}" wx:key="index" class="update-item">
-          {{index + 1}}. {{item}}
-        </view>
-      </view>
-
-      <button class="update-btn" bindtap="closeUpdatePopup">我知道了</button>
-    </view>
-  </view>
-
   <!-- 操作栏 -->
   <view class="action-bar">
     <button class="reset-btn" bindtap="resetForm">重置</button>
@@ -750,12 +737,13 @@
 </view>
 </view>
 
-<!-- ===== 详细结果页 ===== -->
+<!-- ===== 提升分析页 ===== -->
 <view wx:if="{{ui.currentTab === 'detail'}}" class="detail-container">
+<view class="page-title page-title-compact">提升分析</view>
 
 <!-- 轴详细结果标题块 -->
 <view class="other-block" style="text-align: center;">
-  <view class="other-block-title" style="text-align: center;">轴详细结果</view>
+  <view class="other-block-title" style="text-align: center;">当前结果</view>
   <view class="other-app-name">{{axisResult.schoolName || '—'}} · {{axisResult.axisName || '—'}}</view>
   <view class="other-version-badge" style="align-self: center; margin-top: 12rpx;">{{currentTarget.targetName || '—'}}</view>
 </view>
@@ -785,23 +773,102 @@
     </view>
   </view>
 
+  <!-- 面板分析 -->
+  <view class="other-block">
+    <view class="section-title-row" bindtap="togglePanelAnalysis">
+      <view class="other-block-title" style="font-size: 36rpx; color: #fa8c16; font-weight: 700;">面板分析</view>
+      <text class="section-action">{{ui.showPanelAnalysis ? '收起' : '展开'}}</text>
+    </view>
+    <view wx:if="{{ui.showPanelAnalysis}}">
+      <view wx:if="{{panelAdviceList.length === 0}}" class="other-empty">
+        当前面板暂无优化建议
+      </view>
+      <view
+        wx:for="{{panelAdviceList}}"
+        wx:key="index"
+        class="advice-item {{item.level === 'warn' ? 'advice-warn' : 'advice-info'}}"
+      >
+        <text class="advice-icon">{{item.level === 'warn' ? '⚠️' : 'ℹ️'}}</text>
+        <text class="advice-text">{{item.text}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 词条提升分析 -->
+  <view class="other-block" style="padding-bottom: 10rpx;">
+    <view class="other-block-title" style="font-size: 36rpx; color: #1677ff; font-weight: 700;">词条收益</view>
+    <view class="improve-sub-title">
+      基准 DPS：{{axisResult.dps}} · 每行为加入一条满值词条后的预估收益
+    </view>
+  </view>
+
+  <view class="improve-table-header">
+    <text class="improve-col improve-col-name">词条</text>
+    <text class="improve-col improve-col-max">满值</text>
+    <text class="improve-col improve-col-dps">提升后DPS</text>
+    <text class="improve-col improve-col-rate">提升率</text>
+  </view>
+
+  <view wx:if="{{improveList.length === 0}}" class="other-empty improve-empty">
+    暂无词条收益数据，请先返回面板页点击「开始计算」
+  </view>
+
+  <view wx:else class="improve-table-body">
+    <view
+      wx:for="{{improveList}}"
+      wx:key="name"
+      class="improve-row {{index % 2 === 0 ? 'improve-row-even' : 'improve-row-odd'}}"
+    >
+      <text class="improve-col improve-col-name">{{item.name}}</text>
+      <text class="improve-col improve-col-max">{{item.maxValue}}</text>
+      <text class="improve-col improve-col-dps">{{item.boostedDps}}</text>
+      <text class="improve-col improve-col-rate improve-highlight">{{item.improveRate}}</text>
+    </view>
+  </view>
+
   <!-- 技能明细 -->
+  <view class="other-block detail-section-head">
+    <view class="other-block-title">技能明细</view>
+  </view>
   <view
     wx:for="{{axisResult.details}}"
     wx:for-index="idx"
     wx:key="idx"
     wx:if="{{item.skillName !== 'N/A' && item.count !== 0 && item.count !== '0'}}"
-    class="detail-card"
+    class="detail-card {{expandedSkillMap[idx] ? 'detail-card-expanded' : ''}}"
+    data-index="{{idx}}"
+    bindtap="toggleSkillDetail"
   >
     <!-- 技能序号角标 -->
     <view class="detail-index">{{idx + 1}}</view>
 
     <view class="detail-header">
-      <text class="detail-name">{{item.skillName}}</text>
-      <text class="detail-count">×{{item.count}}</text>
+      <view class="detail-title-wrap">
+        <text class="detail-name">{{item.skillName}}</text>
+        <text class="detail-count">×{{item.count}}</text>
+      </view>
+      <view class="detail-toggle">
+        <text>{{expandedSkillMap[idx] ? '收起' : '展开'}}</text>
+        <text class="detail-toggle-icon">{{expandedSkillMap[idx] ? '⌃' : '⌄'}}</text>
+      </view>
     </view>
 
-    <view class="detail-grid">
+    <view class="detail-summary-row">
+      <view class="detail-summary-pill">
+        <text class="detail-summary-label">期望</text>
+        <text class="detail-summary-value">{{item.expectedDamage}}</text>
+      </view>
+      <view class="detail-summary-pill">
+        <text class="detail-summary-label">总伤害</text>
+        <text class="detail-summary-value">{{item.totalDamage}}</text>
+      </view>
+      <view class="detail-summary-pill">
+        <text class="detail-summary-label">会心</text>
+        <text class="detail-summary-value">{{item.finalInsightRate}}</text>
+      </view>
+    </view>
+
+    <view class="detail-grid" wx:if="{{expandedSkillMap[idx]}}">
       <view class="detail-grid-item">
         <text class="detail-grid-label">期望伤害</text>
         <text class="detail-grid-value">{{item.expectedDamage}}</text>
@@ -862,6 +929,7 @@
 
 <!-- ===== 其他页 ===== -->
 <view wx:if="{{ui.currentTab === 'other'}}" class="other-container">
+<view class="page-title page-title-compact">我的</view>
 
 <!-- 关于 -->
 <view class="other-block">
@@ -870,12 +938,19 @@
     <view class="other-app-name">国际服全流派毕业度计算器</view>
     <view class="other-version-badge">v3.2.0</view>
   </view>
+  <view class="other-entry-row" bindtap="openUpdatePopup">
+    <view>
+      <view class="other-entry-title">更新公告</view>
+      <view class="other-entry-desc">查看当前版本更新内容</view>
+    </view>
+    <text class="other-entry-arrow">›</text>
+  </view>
 </view>
 
 <!-- 装备管理 -->
 <view class="other-block" bindtap="navigateToEquipment">
-  <view class="other-block-title">⚔️装备管理</view>
-  <view class="other-config-label">管理和保存装备配置</view>
+  <view class="other-block-title">装备库</view>
+  <view class="other-config-label">添加装备、校准基础面板、遍历最优搭配</view>
 </view>
 
 <!-- 历史配置 -->
@@ -895,6 +970,22 @@
       <button class="other-btn-load" data-index="{{index}}" bindtap="handleLoadConfig">加载</button>
       <button class="other-btn-delete" data-index="{{index}}" bindtap="handleDeleteConfig">删除</button>
     </view>
+  </view>
+</view>
+
+<!-- 更新日志弹窗 -->
+<view wx:if="{{showUpdatePopup}}" class="update-mask">
+  <view class="update-popup">
+    <view class="update-title">更新日志</view>
+    <view class="update-version">版本 {{updateLogVersion}}</view>
+
+    <view class="update-content">
+      <view wx:for="{{updateLogContent}}" wx:key="index" class="update-item">
+        {{index + 1}}. {{item}}
+      </view>
+    </view>
+
+    <button class="update-btn" bindtap="closeUpdatePopup">我知道了</button>
   </view>
 </view>
 
@@ -961,72 +1052,6 @@
   <text>↑</text>
 </view>
 
-<!-- ===== 提升页 ===== -->
-<view wx:if="{{ui.currentTab === 'improve'}}" class="other-container">
-
-<block wx:if="{{!improveReady}}">
-  <view class="other-block">
-    <view class="other-empty">请先在面板页点击「开始计算」</view>
-  </view>
-</block>
-
-<block wx:else>
-
-  <!-- 面板分析卡片 -->
-  <view class="other-block">
-    <view class="section-title-row" bindtap="togglePanelAnalysis">
-      <view class="other-block-title" style="font-size: 36rpx; color: #fa8c16; font-weight: 700;">面板分析</view>
-      <text class="section-action">{{ui.showPanelAnalysis ? '收起' : '展开'}}</text>
-    </view>
-    <view wx:if="{{ui.showPanelAnalysis}}">
-      <view wx:if="{{panelAdviceList.length === 0}}" class="other-empty">
-        当前面板无需优化，配置良好
-      </view>
-      <view
-        wx:for="{{panelAdviceList}}"
-        wx:key="index"
-        class="advice-item {{item.level === 'warn' ? 'advice-warn' : 'advice-info'}}"
-      >
-        <text class="advice-icon">{{item.level === 'warn' ? '⚠️' : 'ℹ️'}}</text>
-        <text class="advice-text">{{item.text}}</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 词条提升分析卡片 -->
-  <view class="other-block" style="padding-bottom: 10rpx;">
-    <view class="other-block-title" style="font-size: 36rpx; color: #1677ff; font-weight: 700;">词条提升分析</view>
-    <view class="improve-sub-title">
-      基准 DPS：{{axisResult.dps}} · 每行为加入一条满值词条后的预估收益
-    </view>
-  </view>
-
-  <!-- 表头 -->
-  <view class="improve-table-header">
-    <text class="improve-col improve-col-name">词条</text>
-    <text class="improve-col improve-col-max">满值</text>
-    <text class="improve-col improve-col-dps">提升后DPS</text>
-    <text class="improve-col improve-col-rate">提升率</text>
-  </view>
-
-  <!-- 数据行 -->
-  <view class="improve-table-body">
-    <view
-      wx:for="{{improveList}}"
-      wx:key="name"
-      class="improve-row {{index % 2 === 0 ? 'improve-row-even' : 'improve-row-odd'}}"
-    >
-      <text class="improve-col improve-col-name">{{item.name}}</text>
-      <text class="improve-col improve-col-max">{{item.maxValue}}</text>
-      <text class="improve-col improve-col-dps">{{item.boostedDps}}</text>
-      <text class="improve-col improve-col-rate improve-highlight">{{item.improveRate}}</text>
-    </view>
-  </view>
-
-</block>
-
-</view>
-
 <!-- ===== 底部导航栏 ===== -->
 <view class="tab-bar">
   <view
@@ -1035,7 +1060,15 @@
     bindtap="handleTabChange"
   >
     <text class="tab-icon">📋</text>
-    <text class="tab-label">面板</text>
+    <text class="tab-label">面板计算</text>
+  </view>
+
+  <view
+    class="tab-item"
+    bindtap="navigateToEquipment"
+  >
+    <text class="tab-icon">📗</text>
+    <text class="tab-label">装备库</text>
   </view>
 
   <view
@@ -1043,17 +1076,8 @@
     data-tab="detail"
     bindtap="handleTabChange"
   >
-    <text class="tab-icon">📊</text>
-    <text class="tab-label">详细结果</text>
-  </view>
-
-  <view
-    class="tab-item {{ui.currentTab === 'improve' ? 'tab-active' : ''}}"
-    data-tab="improve"
-    bindtap="handleTabChange"
-  >
     <text class="tab-icon">📈</text>
-    <text class="tab-label">提升</text>
+    <text class="tab-label">提升分析</text>
   </view>
 
   <view
@@ -1062,6 +1086,6 @@
     bindtap="handleTabChange"
   >
     <text class="tab-icon">⚙️</text>
-    <text class="tab-label">配置</text>
+    <text class="tab-label">我的</text>
   </view>
 </view>

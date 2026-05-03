@@ -689,6 +689,14 @@ Page({
     detailEquipment: null,
     basePanelDisplay: [],
     scoreStatusText: '',
+    flowStatus: {
+      hasSession: false,
+      hasBasePanel: false,
+      hasFullSlots: false,
+      sessionText: '未完成面板计算',
+      basePanelText: '未校准基础面板',
+      slotText: '装备候选未满 8 部位'
+    },
 
     isEditing: false,
     editingIndex: -1,
@@ -1006,8 +1014,27 @@ confirmAddAffix() {
         : list.filter(eq => eq.slot === filterSlot),
       scoreStatusText: scoreContext
         ? validation.message
-        : '请先在计算器计算并校准基础面板'
+        : '请先在计算器计算并校准基础面板',
+      flowStatus: this.buildFlowStatus(snapshot, basePanel, list)
     });
+  },
+
+  buildFlowStatus(snapshot, basePanel, list) {
+    const hasSession = !!(snapshot && snapshot.currentAxis && snapshot.currentAxis.axisName);
+    const hasBasePanel = !!(basePanel && Object.keys(basePanel).length > 0);
+    const filledSlotCount = new Set((list || []).map(eq => eq.slot).filter(Boolean)).size;
+    const hasFullSlots = filledSlotCount >= SLOTS.length;
+    const schoolName = snapshot?.currentSchool?.schoolName || '';
+    const axisName = snapshot?.currentAxis?.axisName || '';
+
+    return {
+      hasSession,
+      hasBasePanel,
+      hasFullSlots,
+      sessionText: hasSession ? `已计算：${schoolName} / ${axisName}` : '未完成面板计算',
+      basePanelText: hasBasePanel ? '已校准基础面板' : '未校准基础面板',
+      slotText: hasFullSlots ? '8 个部位均有候选' : `已有 ${filledSlotCount}/${SLOTS.length} 个部位候选`
+    };
   },
 
   // 获取筛选后的装备列表

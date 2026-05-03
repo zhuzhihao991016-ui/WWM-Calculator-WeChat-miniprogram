@@ -1,0 +1,47 @@
+{
+  "description": "燕云国际服全流派毕业度计算器",
+  "packOptions": {
+    "ignore": [{
+      "type": "folder",
+      "value": "scripts"
+    },
+    {
+      "type": "folder",
+      "value": "node_modules"
+    },
+    {
+      "type": "suffix",
+      "value": ".bat"
+    },
+    {
+      "type": "suffix",
+      "value": ".sh"
+    },
+    {
+      "type": "file",
+      "value": "data/cloud-game-data.json"
+    },
+    {
+      "type": "file",
+      "value": "package.json"
+    },
+    {
+      "type": "file",
+      "value": "package-lock.json"
+    }]
+  },
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": false,
+    "postcss": true,
+    "minified": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "trial",
+  "appid": "wx8e9e5ac181fba559",
+  "projectname": "panel-calculator",
+  "simulatorType": "wechat",
+  "condition": {},
+  "cloudfunctionRoot": "cloudfunctions/"
+}

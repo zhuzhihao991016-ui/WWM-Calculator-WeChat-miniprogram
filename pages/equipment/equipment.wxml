@@ -1,4 +1,24 @@
 <view class="container">
+  <view class="page-title">装备库</view>
+
+  <view class="flow-status-card">
+    <view class="flow-status-title">装备搭配流程</view>
+    <view class="flow-status-grid">
+      <view class="flow-status-item {{flowStatus.hasSession ? 'is-ready' : 'is-pending'}}">
+        <text class="flow-status-dot"></text>
+        <text class="flow-status-text">{{flowStatus.sessionText}}</text>
+      </view>
+      <view class="flow-status-item {{flowStatus.hasBasePanel ? 'is-ready' : 'is-pending'}}">
+        <text class="flow-status-dot"></text>
+        <text class="flow-status-text">{{flowStatus.basePanelText}}</text>
+      </view>
+      <view class="flow-status-item {{flowStatus.hasFullSlots ? 'is-ready' : 'is-pending'}}">
+        <text class="flow-status-dot"></text>
+        <text class="flow-status-text">{{flowStatus.slotText}}</text>
+      </view>
+    </view>
+  </view>
+
   <view class="panel-display">
   <!-- 标题行 + 收起按钮 -->
   <view class="panel-header-row">
@@ -231,11 +251,15 @@
 
   <!-- 底部导航栏 -->
 <view class="action-bar">
-  <button class="action-btn btn-add" bindtap="openAddDialog">添加装备</button>
-  <button class="action-btn btn-clear" bindtap="handleClearAll">清空装备</button>
-  <button class="action-btn btn-calibrate" bindtap="openCalibrationDialog">校准面板</button>
-  <button class="action-btn btn-traverse" bindtap="handleTraverse">开始遍历</button>
-  <button class="action-btn btn-score" bindtap="validateEquipmentScores">验证评分</button>
+  <view class="action-primary-row">
+    <button class="action-btn btn-add" bindtap="openAddDialog">添加装备</button>
+    <button class="action-btn btn-traverse" bindtap="handleTraverse">开始遍历</button>
+  </view>
+  <view class="action-secondary-row">
+    <button class="action-btn action-btn-secondary btn-calibrate" bindtap="openCalibrationDialog">校准面板</button>
+    <button class="action-btn action-btn-secondary btn-score" bindtap="validateEquipmentScores">验证评分</button>
+    <button class="action-btn action-btn-secondary btn-clear" bindtap="handleClearAll">清空装备</button>
+  </view>
 </view>
 
   <!-- 添加装备弹窗 -->
