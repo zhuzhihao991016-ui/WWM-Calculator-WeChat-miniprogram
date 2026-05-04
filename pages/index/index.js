@@ -787,85 +787,175 @@ Page({
     }
     const warn = text => adviceList.push({ level: 'warn', text })
     const info = text => adviceList.push({ level: 'info', text })
-
-    // 全局规则
-    if (num('precisionRate') < 99) warn('精准率低于 99%，建议将精准率提升至 100%')
-    if (num('physicalPenetration') < 23.4) warn('外功穿透低于 23.4，建议进一步提升外功穿透')
+    const isSetNotIn = names => !names.includes(selectedSet)
 
     const allElements        = ['鸣金', '牵丝', '裂石', '破竹']
     const nonMainElements    = allElements.filter(e => e !== mainElement)
     const elementMaxKeyMap   = { 鸣金: 'mingjinMax', 牵丝: 'qiansiMax', 裂石: 'lieshiMax', 破竹: 'pozhuMax' }
     const elementMinKeyMap   = { 鸣金: 'mingjinMin', 牵丝: 'qiansiMin', 裂石: 'lieshiMin', 破竹: 'pozhuMin' }
-    const nonMainWithMax     = nonMainElements.filter(e => num(elementMaxKeyMap[e]) > 0)
-    const nonMainWithLargeMin = nonMainElements.filter(e => num(elementMinKeyMap[e]) > 100)
+    const buildLargeAttackAdvice = () => {
+      // 全局规则
+      if (num('precisionRate') < 99) warn('精准率低于 99%，建议将精准率提升至 100%')
+      if (num('physicalPenetration') < 32) warn('外功穿透低于 32，建议进一步提升外功穿透')
 
-    if (nonMainWithMax.length > 0)
-      info(`检测到非主属性（${nonMainWithMax.join('、')}）存在最大属攻，建议将外系属攻优化掉以减少词条浪费`)
-    if (nonMainWithLargeMin.length > 0)
-      warn(`非主属性（${nonMainWithLargeMin.join('、')}）最小属攻超过 100，建议减少外系最小属攻`)
+      const nonMainWithMax      = nonMainElements.filter(e => num(elementMaxKeyMap[e]) > 0)
+      const nonMainWithLargeMin = nonMainElements.filter(e => num(elementMinKeyMap[e]) > 100)
 
-    const mainMinKey = elementMinKeyMap[mainElement]
-    const mainMaxKey = elementMaxKeyMap[mainElement]
-    if (mainMinKey && num(mainMinKey) > 300) warn(`${mainElement}最小属攻超过 300，建议减少本系最小属攻以优化词条分配`)
-    if (mainMaxKey && num(mainMaxKey) > 650) warn(`${mainElement}最大属攻超过 650，建议减少本系最大属攻以优化词条分配`)
-    if (num('martialBoostValue1') === 0) warn('武学增效数值为 0，建议提高武学增效以提升总体伤害')
-    if (num('bossBonus') === 0) warn('首领增伤为 0，建议提高首领增伤')
+      if (nonMainWithMax.length > 0)
+        info(`检测到非主属性（${nonMainWithMax.join('、')}）存在最大属攻，建议将外系属攻优化掉以减少词条浪费`)
+      if (nonMainWithLargeMin.length > 0)
+        warn(`非主属性（${nonMainWithLargeMin.join('、')}）最小属攻超过 100，建议减少外系最小属攻`)
 
-    // 流派规则
-    const schoolRules = {
-      鸣金虹: () => {
-        if (num('physicalMaxAttack') < 2200) warn('最大外功低于 2200，建议进一步提升最大外功')
-        if (num('physicalMinAttack') > 800)  warn('最小外攻超过 800，建议减少最小外攻')
-        if (num('perfectRate') < 35)         warn('会意率低于 35%，建议将会意率提升至 37% 以上')
-        if (num('insightRate') < 38)         warn('会心率低于 38%，建议将会心率提升至 42% 以上')
-        if (num('noteValue1') < 14)          info('剑蓄力增伤定音低于 14%，建议提高剑蓄力增伤定音')
-      },
-      鸣金影: () => {
-        if (num('physicalMaxAttack') < 2200) warn('最大外功低于 2200，建议进一步提升最大外功')
-        if (num('physicalMinAttack') > 800)  warn('最小外攻超过 800，建议减少最小外攻')
-        if (num('perfectRate') < 35)         warn('会意率低于 35%，建议将会意率提升至 37% 以上')
-        if (num('insightRate') < 38)         warn('会心率低于 38%，建议将会心率提升至 42% 以上')
-        if (num('noteValue1') < 14)          info('流血增伤定音低于 14%，建议提高流血增伤定音')
-      },
-      牵丝玉: () => {
-        if (num('physicalMaxAttack') < 2050) warn('最大外功低于 2050，建议进一步提升最大外功')
-        if (num('physicalMinAttack') < 750)  warn('最小外攻低于 750，建议进一步提升最小外攻')
-        if (num('insightRate') < 60)         warn('会心率低于 60%，建议将会心率提升至 65% 以上')
-        if (num('noteValue1') < 14)          info('伞特殊增伤定音低于 14%，建议提高伞特殊增伤定音')
-        if (num('perfectRate') > 21)         warn('会意率超过 21%，建议降低会意率以优化词条分配')
-      },
-      裂石威: () => {
-        if (num('physicalMaxAttack') < 1950) warn('最大外功低于 1950，建议进一步提升最大外功')
-        if (num('physicalMinAttack') < 800)  warn('最小外攻低于 800，建议进一步提升最小外攻')
-        if (num('insightRate') < 54.5)       warn('会心率低于 54.5%，建议将会心率提升至 56%')
-        if (num('insightRate') > 57.5)       warn('会心率高于 57.5%，建议将会心率降低至 56% 附近')
-        if (num('noteValue1') < 14)          info('陌刀蓄力增伤定音低于 14%，建议提高陌刀蓄力增伤定音')
-        if (num('perfectRate') > 16)         warn('会意率超过 16%，建议降低会意率以优化词条分配')
-        if (selectedSet !== '时雨')           info('裂石威推荐使用时雨套装，建议检查套装选择')
-      },
-      破竹风: () => {
-        if (num('physicalMaxAttack') < 2100) warn('最大外功低于 2100，建议进一步提升最大外功')
-        if (num('physicalMinAttack') < 800)  warn('最小外攻低于 800，建议进一步提升最小外攻')
-        if (num('insightRate') < 60)         warn('会心率低于 60%，建议将会心率提升至 65% 以上')
-        if (num('noteValue1') < 14)          info('鼠鼠增伤定音低于 14%，建议提高鼠鼠增伤定音')
-        if (num('perfectRate') > 21)         warn('会意率超过 21%，建议降低会意率以优化词条分配')
-      },
-      破竹尘: () => {
-        if (num('physicalMaxAttack') < 2000) warn('最大外功低于 2000，建议进一步提升最大外功')
-        if (num('physicalMinAttack') < 800)  warn('最小外攻低于 800，建议进一步提升最小外攻')
-        if (num('insightRate') < 65)         warn('会心率低于 65%，建议将会心率提升至 70% 以上')
-        if (num('noteValue1') < 14)          info('伞武学增伤定音低于 14%，建议提高伞武学增伤定音')
-        if (num('perfectRate') > 15 && selectedSet !== '飞隼')
-          warn('会意率超过 15% 且套装非飞隼，建议降低会意率以优化词条分配')
-      },
+      const mainMinKey = elementMinKeyMap[mainElement]
+      const mainMaxKey = elementMaxKeyMap[mainElement]
+      if (mainMinKey && num(mainMinKey) > 300) warn(`${mainElement}最小属攻超过 300，建议减少本系最小属攻以优化词条分配`)
+      if (mainMaxKey && num(mainMaxKey) > 650) warn(`${mainElement}最大属攻超过 650，建议减少本系最大属攻以优化词条分配`)
+      if (num('martialBoostValue1') === 0) warn('武学增效数值为 0，建议提高武学增效以提升总体伤害')
+      if (num('bossBonus') === 0) warn('首领增伤为 0，建议提高首领增伤')
+
+      const schoolRules = {
+        鸣金虹: () => {
+          if (num('physicalMaxAttack') < 2800) warn('最大外功低于 2800，建议进一步提升最大外功')
+          if (num('physicalMinAttack') > 950)  warn('最小外攻超过 950，建议减少最小外攻')
+          if (num('perfectRate') < 35)         warn('会意率低于 35%，建议将会意率提升至 37% 以上')
+          if (num('insightRate') < 38)         warn('会心率低于 38%，建议将会心率提升至 42% 以上')
+          if (num('noteValue1') < 18)          info('剑蓄力增伤定音低于 18%，建议提高剑蓄力增伤定音')
+        },
+        鸣金影: () => {
+          if (num('physicalMaxAttack') < 2850) warn('最大外功低于 2850，建议进一步提升最大外功')
+          if (num('physicalMinAttack') > 950)  warn('最小外攻超过 950，建议减少最小外攻')
+          if (num('perfectRate') < 35)         warn('会意率低于 35%，建议将会意率提升至 37% 以上')
+          if (num('insightRate') < 38)         warn('会心率低于 38%，建议将会心率提升至 42% 以上')
+          if (num('noteValue1') < 18)          info('流血增伤定音低于 18%，建议提高流血增伤定音')
+        },
+        牵丝玉: () => {
+          if (num('physicalMaxAttack') < 2550) warn('最大外功低于 2550，建议进一步提升最大外功')
+          if (num('physicalMinAttack') < 1100)  warn('最小外攻低于 1100，建议进一步提升最小外攻')
+          if (num('insightRate') < 65)         warn('会心率低于 65%，建议将会心率提升至 70% 以上')
+          if (num('noteValue1') < 18)          info('伞特殊增伤定音低于 18%，建议提高伞特殊增伤定音')
+          if (num('perfectRate') > 21)         warn('会意率超过 21%，建议降低会意率以优化词条分配')
+        },
+        裂石威: () => {
+          if (num('physicalMaxAttack') < 2550) warn('最大外功低于 2550，建议进一步提升最大外功')
+          if (num('physicalMinAttack') < 1200)  warn('最小外攻低于 1200，建议进一步提升最小外攻')
+          if (num('insightRate') < 54.5)       warn('会心率低于 54.5%，建议将会心率提升至 56%')
+          if (num('insightRate') > 58)       warn('会心率高于 58%，建议将会心率降低至 56% 附近')
+          if (num('noteValue1') < 18)          info('陌刀蓄力增伤定音低于 18%，建议提高陌刀蓄力增伤定音')
+          if (num('perfectRate') > 14)         warn('会意率超过 14%，建议降低会意率以优化词条分配')
+          if (selectedSet !== '时雨')           info('裂石威推荐使用时雨套装，建议检查套装选择')
+        },
+        裂石均: () => {
+          if (num('physicalMaxAttack') < 2700) warn('大外低于 2700，建议进一步提升大外以提升总体伤害')
+          if (num('insightRate') < 65)         warn('会心率低于 65%，建议将会心率提升至 70% 以上以提升总体伤害')
+          if (num('noteValue2') < 18)          info('陌刀蓄力增伤定音低于 18%，建议提高陌刀蓄力增伤定音以提升总体伤害')
+          if (isSetNotIn(['断岳', '时雨(无盾)'])) info('裂石均推荐携带断岳套装，建议检查套装选择')
+          if (num('perfectRate') > 13)         warn('会意率高于 13%，建议优化会意率以提高总体伤害')
+        },
+        破竹风: () => {
+          if (num('physicalMaxAttack') < 2650) warn('最大外功低于 2650，建议进一步提升最大外功')
+          if (num('physicalMinAttack') < 950)  warn('最小外攻低于 950，建议进一步提升最小外攻')
+          if (num('insightRate') < 60)         warn('会心率低于 60%，建议将会心率提升至 65% 以上')
+          if (num('noteValue1') < 18)          info('鼠鼠增伤定音低于 18%，建议提高鼠鼠增伤定音')
+          if (num('perfectRate') > 21)         warn('会意率超过 21%，建议降低会意率以优化词条分配')
+        },
+        破竹尘: () => {
+          if (num('physicalMaxAttack') < 2550) warn('最大外功低于 2550，建议进一步提升最大外功')
+          if (num('physicalMinAttack') < 1000)  warn('最小外攻低于 1000，建议进一步提升最小外攻')
+          if (num('insightRate') < 65)         warn('会心率低于 65%，建议将会心率提升至 70% 以上')
+          if (num('noteValue1') < 18)          info('伞武学增伤定音低于 18%，建议提高伞武学增伤定音')
+          if (num('perfectRate') > 15 && selectedSet !== '飞隼')
+            warn('会意率超过 15% 且套装非飞隼，建议降低会意率以优化词条分配')
+        },
+      }
+      if (schoolRules[schoolName]) schoolRules[schoolName]()
+
+      if (selectedSet === '飞隼' && num('perfectRate') < 17)
+        info('当前选择了飞隼套装，建议将会意率提升至 17% 以上以充分发挥套装效果')
+      if (selectedSet === '时雨' && schoolName !== '裂石威')
+        warn('时雨套装需要护盾触发效果，当前流派可能无法稳定触发，建议选择时雨（无盾）版本或其他套装')
     }
-    if (schoolRules[schoolName]) schoolRules[schoolName]()
 
-    // 套装规则
-    if (selectedSet === '飞隼' && num('perfectRate') < 17)
-      info('当前选择了飞隼套装，建议将会意率提升至 17% 以上以充分发挥套装效果')
-    if (selectedSet === '时雨' && schoolName !== '裂石威')
-      warn('时雨套装需要护盾触发效果，当前流派可能无法稳定触发，建议选择时雨（无盾）版本或其他套装')
+    const buildSmallAttackAdvice = () => {
+      if (num('precisionRate') < 99) warn('精准率低于 99%，建议将精准率提升至 100%')
+      if (num('physicalPenetration') < 30) warn('外功穿透低于 30，建议进一步提升外功穿透')
+
+      const nonMainWithMax     = nonMainElements.filter(e => num(elementMaxKeyMap[e]) > 0)
+      const nonMainWithZeroMin = nonMainElements.filter(e => num(elementMinKeyMap[e]) === 0)
+
+      if (nonMainWithMax.length > 0)
+        info(`存在非主属性最大属攻（${nonMainWithMax.join('、')}），建议将外系最大属攻优化掉以减少词条浪费`)
+      if (Math.max(num('martialBoostValue1'), num('martialBoostValue2')) < 5)
+        warn('武学增效数值小于 5%，建议提高武学增效以提升总体伤害')
+      if (num('allMartialBonus') < 5)
+        warn('全武学增效数值小于 5%，建议提高全武学增效以提升总体伤害')
+      if (num('bossBonus') < 5)
+        warn('首领增伤数值小于 5%，建议提高首领增伤以提升总体伤害')
+
+      const warnNonMainZeroMin = () => {
+        if (nonMainWithZeroMin.length > 0)
+          warn(`非主属性（${nonMainWithZeroMin.join('、')}）的最小属攻为 0，建议提高外系最小属攻以提升总体伤害`)
+      }
+
+      const schoolRules = {
+        鸣金虹: () => warn('鸣金虹为会意流派，不推荐小外流'),
+        鸣金影: () => warn('鸣金影为会意流派，不推荐小外流'),
+        牵丝玉: () => {
+          if (num('physicalMaxAttack') > 1600) warn('大外高于 1600，建议优化掉劲、势、大外词条以避免词条浪费')
+          if (num('physicalMinAttack') < 1900) warn('小外低于 1900，建议将小外提升至 1900 以上以提升总体伤害')
+          if (num('insightRate') < 68)         warn('会心率低于 68%，建议将会心率提升至 70% 以上以提升总体伤害')
+          if (num('noteValue1') < 18)          info('伞特殊增伤定音低于 18%，建议提高伞特殊增伤定音以提升总体伤害')
+          if (isSetNotIn(['时雨(无盾)']))       info('牵丝玉推荐携带时雨套装，建议检查套装选择')
+          if (num('perfectRate') > 14)         warn('会意率高于 14%，建议优化会意率以提高总体伤害')
+          warnNonMainZeroMin()
+        },
+        裂石威: () => {
+          if (num('physicalMaxAttack') > 1580) warn('大外高于 1580，建议优化掉劲、势、大外词条以避免词条浪费')
+          if (num('physicalMinAttack') < 1850) warn('小外低于 1850，建议将小外提升至 1850 以上以提升总体伤害')
+          if (num('insightRate') < 54)         warn('会心率低于 54%，建议将会心率提升至 56% 以上以提升总体伤害')
+          if (num('insightRate') > 58)         warn('会心率高于 58%，建议将会心率降低至 56% 左右以避免词条浪费')
+          if (num('noteValue1') < 18)          info('陌刀蓄力增伤定音低于 18%，建议提高陌刀蓄力增伤定音以提升总体伤害')
+          if (selectedSet !== '时雨')           info('裂石威推荐携带时雨套装，建议检查套装选择')
+          if (num('perfectRate') > 13)         warn('会意率高于 13%，建议优化会意率以提高总体伤害')
+        },
+        破竹风: () => {
+          if (num('physicalMaxAttack') > 1600) warn('大外高于 1600，建议优化掉劲、势、大外词条以避免词条浪费')
+          if (num('physicalMinAttack') < 1900) warn('小外低于 1900，建议将小外提升至 1900 以上以提升总体伤害')
+          if (num('insightRate') < 65)         warn('会心率低于 65%，建议将会心率提升至 65% 以上以提升总体伤害')
+          if (num('insightRate') > 72)         warn('会心率高于 72%，建议将会心率降低至 70% 以提升总体伤害')
+          if (num('noteValue1') < 18)          info('鼠鼠增伤定音低于 18%，建议提高鼠鼠增伤定音以提升总体伤害')
+          if (selectedSet !== '燕归')           info('破竹风推荐携带燕归套装，建议检查套装选择')
+          if (num('perfectRate') > 14)         warn('会意率高于 14%，建议优化会意率以提高总体伤害')
+          warnNonMainZeroMin()
+        },
+        破竹尘: () => {
+          if (num('physicalMaxAttack') > 1580) warn('大外高于 1580，建议优化掉劲、势、大外词条以避免词条浪费')
+          if (num('physicalMinAttack') < 1980) warn('小外低于 1980，建议将小外提升至 1980 以上以提升总体伤害')
+          if (num('insightRate') < 75)         warn('会心率低于 75%，建议将会心率提升至 75% 以上以提升总体伤害')
+          if (num('noteValue1') < 18)          info('伞武学增伤定音低于 18%，建议提高伞武学增伤定音以提升总体伤害')
+          if (selectedSet !== '连星')           info('破竹尘推荐携带连星套装，建议检查套装选择')
+          if (num('perfectRate') > 14)         warn('会意率高于 14%，建议优化会意率以提高总体伤害')
+          warnNonMainZeroMin()
+        },
+        裂石均: () => {
+          if (num('physicalMaxAttack') > 1580) warn('大外高于 1580，建议优化掉劲、势、大外词条以避免词条浪费')
+          if (num('physicalMinAttack') < 1980) warn('小外低于 1980，建议将小外提升至 1980 以上以提升总体伤害')
+          if (num('insightRate') < 65)         warn('会心率低于 65%，建议将会心率提升至 75% 以上以提升总体伤害')
+          if (num('noteValue2') < 18)          info('陌刀蓄力增伤定音低于 18%，建议提高陌刀蓄力增伤定音以提升总体伤害')
+          if (isSetNotIn(['断岳', '时雨(无盾)'])) info('裂石均推荐携带断岳套装，建议检查套装选择')
+          if (num('perfectRate') > 13)         warn('会意率高于 13%，建议优化会意率以提高总体伤害')
+          warnNonMainZeroMin()
+        },
+      }
+      if (schoolRules[schoolName]) schoolRules[schoolName]()
+    }
+
+    const physicalMinAttack = num('physicalMinAttack')
+    const physicalMaxAttack = num('physicalMaxAttack')
+    if (physicalMaxAttack > physicalMinAttack) {
+      buildLargeAttackAdvice()
+    } else if (physicalMinAttack > physicalMaxAttack) {
+      buildSmallAttackAdvice()
+    }
 
     this.updateState('panelAdviceList', adviceList)
   },

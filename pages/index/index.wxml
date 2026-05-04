@@ -597,104 +597,30 @@
       普通会心率封顶 80%，普通会意率封顶 40%；直接会心/会意可突破上限。
     </view>
 
-    <!-- 其他属性输入 -->
-    <view class="section-title-row">
-      <view class="group-title no-margin">其他属性输入</view>
-      <text class="section-action" bindtap="toggleAllElements">
-        {{ui.showAllElements ? '收起' : '展开'}}
-      </text>
-    </view>
-
-    <view wx:if="{{ui.showAllElements}}">
-      <block wx:if="{{currentSchool.mainElement !== '鸣金'}}">
-        <view class="sub-title">鸣金</view>
-        <view class="form-item">
-          <text class="label">鸣金最小攻击</text>
-          <input class="input" type="digit" value="{{form.mingjinMin}}" data-field="mingjinMin" bindinput="handleInput" />
-        </view>
-        <view class="form-item">
-          <text class="label">鸣金最大攻击</text>
-          <input class="input" type="digit" value="{{form.mingjinMax}}" data-field="mingjinMax" bindinput="handleInput" />
-        </view>
-        <view class="form-item">
-          <text class="label">鸣金穿透</text>
-          <input class="input" type="digit" value="{{form.mingjinPen}}" data-field="mingjinPen" bindinput="handleInput" />
-        </view>
-      </block>
-
-      <block wx:if="{{currentSchool.mainElement !== '牵丝'}}">
-        <view class="sub-title">牵丝</view>
-        <view class="form-item">
-          <text class="label">牵丝最小攻击</text>
-          <input class="input" type="digit" value="{{form.qiansiMin}}" data-field="qiansiMin" bindinput="handleInput" />
-        </view>
-        <view class="form-item">
-          <text class="label">牵丝最大攻击</text>
-          <input class="input" type="digit" value="{{form.qiansiMax}}" data-field="qiansiMax" bindinput="handleInput" />
-        </view>
-        <view class="form-item">
-          <text class="label">牵丝穿透</text>
-          <input class="input" type="digit" value="{{form.qiansiPen}}" data-field="qiansiPen" bindinput="handleInput" />
-        </view>
-      </block>
-
-      <block wx:if="{{currentSchool.mainElement !== '裂石'}}">
-        <view class="sub-title">裂石</view>
-        <view class="form-item">
-          <text class="label">裂石最小攻击</text>
-          <input class="input" type="digit" value="{{form.lieshiMin}}" data-field="lieshiMin" bindinput="handleInput" />
-        </view>
-        <view class="form-item">
-          <text class="label">裂石最大攻击</text>
-          <input class="input" type="digit" value="{{form.lieshiMax}}" data-field="lieshiMax" bindinput="handleInput" />
-        </view>
-        <view class="form-item">
-          <text class="label">裂石穿透</text>
-          <input class="input" type="digit" value="{{form.lieshiPen}}" data-field="lieshiPen" bindinput="handleInput" />
-        </view>
-      </block>
-
-      <block wx:if="{{currentSchool.mainElement !== '破竹'}}">
-        <view class="sub-title">破竹</view>
-        <view class="form-item">
-          <text class="label">破竹最小攻击</text>
-          <input class="input" type="digit" value="{{form.pozhuMin}}" data-field="pozhuMin" bindinput="handleInput" />
-        </view>
-        <view class="form-item">
-          <text class="label">破竹最大攻击</text>
-          <input class="input" type="digit" value="{{form.pozhuMax}}" data-field="pozhuMax" bindinput="handleInput" />
-        </view>
-        <view class="form-item">
-          <text class="label">破竹穿透</text>
-          <input class="input" type="digit" value="{{form.pozhuPen}}" data-field="pozhuPen" bindinput="handleInput" />
-        </view>
-      </block>
-    </view>
-
     <view class="group-title">其他乘区</view>
     <view class="form-item">
       <text class="label">全部武学增效（%）</text>
-      <input class="input" type="digit" value="{{form.allMartialBonus}}" data-field="allMartialBonus" bindinput="handleInput" placeholder="如 2.2 或 2.2%" />
+      <input class="input" type="digit" value="{{form.allMartialBonus}}" data-field="allMartialBonus" bindinput="handleInput" placeholder="如 2.6 或 2.6%" />
     </view>
     <view class="form-item">
       <text class="label">首领增伤（%）</text>
-      <input class="input" type="digit" value="{{form.bossBonus}}" data-field="bossBonus" bindinput="handleInput" placeholder="如 2.4 或 2.4%" />
+      <input class="input" type="digit" value="{{form.bossBonus}}" data-field="bossBonus" bindinput="handleInput" placeholder="如 2.6 或 2.6%" />
     </view>
     <view class="form-item">
       <text class="label">单体控制增伤（%）</text>
-      <input class="input" type="digit" value="{{form.singleControlBonus}}" data-field="singleControlBonus" bindinput="handleInput" placeholder="如 7 或 7%" />
+      <input class="input" type="digit" value="{{form.singleControlBonus}}" data-field="singleControlBonus" bindinput="handleInput" placeholder="如 8 或 8%" />
     </view>
     <view class="form-item">
       <text class="label">单体爆发增伤（%）</text>
-      <input class="input" type="digit" value="{{form.singleBurstBonus}}" data-field="singleBurstBonus" bindinput="handleInput" placeholder="如 7 或 7%" />
+      <input class="input" type="digit" value="{{form.singleBurstBonus}}" data-field="singleBurstBonus" bindinput="handleInput" placeholder="如 8 或 8%" />
     </view>
     <view class="form-item">
       <text class="label">群体伤害增伤（%）</text>
-      <input class="input" type="digit" value="{{form.groupDamageBonus}}" data-field="groupDamageBonus" bindinput="handleInput" placeholder="如 7 或 7%" />
+      <input class="input" type="digit" value="{{form.groupDamageBonus}}" data-field="groupDamageBonus" bindinput="handleInput" placeholder="如 8 或 8%" />
     </view>
     <view class="form-item no-border">
       <text class="label">群体异常增伤（%）</text>
-      <input class="input" type="digit" value="{{form.groupAbnormalBonus}}" data-field="groupAbnormalBonus" bindinput="handleInput" placeholder="如 7 或 7%" />
+      <input class="input" type="digit" value="{{form.groupAbnormalBonus}}" data-field="groupAbnormalBonus" bindinput="handleInput" placeholder="如 8 或 8%" />
     </view>
     <!-- 定音设置 -->
 <view class="group-title" wx:if="{{
@@ -705,15 +631,15 @@
 
 <view class="form-item" wx:if="{{currentSchool.notes[0] && currentSchool.notes[0] !== 'N/A'}}">
   <text class="label">{{currentSchool.notes[0]}}（%）</text>
-  <input class="input" type="digit" value="{{form.noteValue1}}" data-field="noteValue1" bindinput="handleInput" placeholder="如 17.2" />
+  <input class="input" type="digit" value="{{form.noteValue1}}" data-field="noteValue1" bindinput="handleInput" placeholder="如 20" />
 </view>
 <view class="form-item" wx:if="{{currentSchool.notes[1] && currentSchool.notes[1] !== 'N/A'}}">
   <text class="label">{{currentSchool.notes[1]}}（%）</text>
-  <input class="input" type="digit" value="{{form.noteValue2}}" data-field="noteValue2" bindinput="handleInput" placeholder="如 17.2" />
+  <input class="input" type="digit" value="{{form.noteValue2}}" data-field="noteValue2" bindinput="handleInput" placeholder="如 20" />
 </view>
 <view class="form-item" wx:if="{{currentSchool.notes[2] && currentSchool.notes[2] !== 'N/A'}}">
   <text class="label">{{currentSchool.notes[2]}}（%）</text>
-  <input class="input" type="digit" value="{{form.noteValue3}}" data-field="noteValue3" bindinput="handleInput" placeholder="如 17.2" />
+  <input class="input" type="digit" value="{{form.noteValue3}}" data-field="noteValue3" bindinput="handleInput" placeholder="如 20" />
 </view>
 
 <!-- 武学增效 -->
@@ -722,11 +648,11 @@
 </view>
 <view class="form-item" wx:if="{{currentSchool.martialBoost1Name}}">
   <text class="label">{{currentSchool.martialBoost1Name}}（武器：{{currentSchool.weapon1 || '无'}}）（%）</text>
-  <input class="input" type="digit" value="{{form.martialBoostValue1}}" data-field="martialBoostValue1" bindinput="handleInput" placeholder="如 4.4" />
+  <input class="input" type="digit" value="{{form.martialBoostValue1}}" data-field="martialBoostValue1" bindinput="handleInput" placeholder="如 5.2" />
 </view>
 <view class="form-item" wx:if="{{currentSchool.martialBoost2Name}}">
   <text class="label">{{currentSchool.martialBoost2Name}}（武器：{{currentSchool.weapon2 || '无'}}）（%）</text>
-  <input class="input" type="digit" value="{{form.martialBoostValue2}}" data-field="martialBoostValue2" bindinput="handleInput" placeholder="如 4.4" />
+  <input class="input" type="digit" value="{{form.martialBoostValue2}}" data-field="martialBoostValue2" bindinput="handleInput" placeholder="如 5.2" />
 </view>
   </view>
   <!-- 操作栏 -->
@@ -936,7 +862,7 @@
   <view class="other-block-title">关于</view>
   <view class="other-about-body">
     <view class="other-app-name">国际服全流派毕业度计算器</view>
-    <view class="other-version-badge">v3.2.0</view>
+    <view class="other-version-badge">v3.3.0</view>
   </view>
   <view class="other-entry-row" bindtap="openUpdatePopup">
     <view>

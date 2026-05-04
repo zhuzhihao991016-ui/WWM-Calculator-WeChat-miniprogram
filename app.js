@@ -2,10 +2,11 @@ import { equipmentStore } from './store/equipmentStore'
 import { calcStore } from './store/calcStore'
 App({
   globalData: {
-    updateLogVersion: '3.2.0',
+    updateLogVersion: '3.3.0',
     updateLogContent: [
-      '新增了装备评分系统',
-      '评分越高表示词条/装备对输出贡献越多',
+      '更新了UI',
+      '优化了装备库入口逻辑',
+      '更新了面板提升分析的建议清单'
     ]
   },
   onLaunch() {
