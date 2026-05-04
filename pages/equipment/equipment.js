@@ -145,6 +145,11 @@ function isBaseSlot(slot) {
   return BASE_SLOTS.includes(slot);
 }
 
+function isSameTuneSkillSlotGroup(prevSlot, nextSlot) {
+  return (isBaseSlot(prevSlot) && isBaseSlot(nextSlot))
+    || (isArmorSlot(prevSlot) && isArmorSlot(nextSlot));
+}
+
 // 游戏内定音技名称 → 项目内部定音技名称
 const OCR_TUNE_SKILL_NAME_MAP = {
   '无名剑法·蓄力技增伤': '剑蓄力增伤',
@@ -2001,7 +2006,12 @@ fillOcrEquipmentToDialog(parsed, rawText) {
     const index = Number(e.detail.value);
     const slot = SLOTS[index];
     const currentSchool = app.equipmentStore.currentSchool;
-    const attrs = this.calculateBaseAttack(slot.key, this.data.newEquipment.quality, this.data.newEquipment.level);
+    const { newEquipment } = this.data;
+    const attrs = this.calculateBaseAttack(slot.key, newEquipment.quality, newEquipment.level);
+    const shouldPreserveTuneSkill = isSameTuneSkillSlotGroup(newEquipment.slot, slot.key);
+    const preservedTuneSkill = shouldPreserveTuneSkill ? newEquipment.tuneSkill : null;
+    const preservedTuneValue = shouldPreserveTuneSkill ? newEquipment.tuneSkillValue : 0;
+    const preservedTuneNeedValue = !!preservedTuneSkill && preservedTuneSkill !== 'N/A';
 
     
     const allList = app.equipmentStore.equipmentList || [];
@@ -2011,12 +2021,12 @@ fillOcrEquipmentToDialog(parsed, rawText) {
     this.setData({
       'newEquipment.slot': slot.key,
       'newEquipment.baseAttrs': attrs,
-      'newEquipment.tuneSkill': null,
-      'newEquipment.tuneSkillValue': 0,
+      'newEquipment.tuneSkill': preservedTuneSkill,
+      'newEquipment.tuneSkillValue': preservedTuneValue,
       'newEquipment.name': defaultName,
       newEquipmentSlotName: slot.name,
       currentTuneSkills: this.buildTuneSkills(currentSchool, slot.key),
-      tuneNeedValue: false,
+      tuneNeedValue: preservedTuneNeedValue,
     });
   },
 

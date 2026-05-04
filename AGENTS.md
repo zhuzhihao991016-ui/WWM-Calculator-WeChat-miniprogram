@@ -39,6 +39,8 @@ Some existing Chinese text in source files appears as mojibake when read by stan
 - `update-data.bat`: runs the data-generation scripts and writes logs under `logs/`.
 - `cloudfunctions/equipmentOcr/`: WeChat cloud function using Tencent Cloud OCR.
 - `images/`: sharing and static image assets.
+- `backup-entry-opt-*/`: local backup snapshots. Treat as historical reference only; do not edit or package intentionally.
+- `preview-*-info.json`: WeChat DevTools preview output. Treat as local/runtime output, not source.
 
 ## State And Data Flow
 
@@ -48,6 +50,8 @@ Some existing Chinese text in source files appears as mojibake when read by stan
 - `equipmentStore.basePanel` represents the calibrated base panel after subtracting selected equipment contributions.
 - Keep calculator-page state and equipment-page state synchronized through the stores, not through duplicated ad hoc storage.
 - User persistence currently uses `wx.getStorageSync` and `wx.setStorageSync`.
+- `utils/cloudData.js` loads generated local data first, then tries the cloud `game_data/current` document, and falls back to cache/local data if cloud access fails.
+- Equipment scoring and traversal depend on a complete calculator snapshot: school, target, skill, axis, set, mentalities, tiangong, food, and base panel must stay internally consistent.
 
 ## Calculation Rules
 
@@ -78,6 +82,16 @@ Some existing Chinese text in source files appears as mojibake when read by stan
   - optional `TENCENT_REGION`, defaulting to `ap-guangzhou`
 - Do not commit secrets or hard-code credentials.
 - Keep cloud-function dependencies isolated under `cloudfunctions/equipmentOcr/package.json`.
+- Validate OCR inputs defensively. The cloud function currently accepts a `fileID`, creates a temporary URL, and sends it to Tencent OCR; avoid returning raw provider errors beyond what users need for troubleshooting.
+- OCR upload paths under `equipment-ocr/` are cloud storage objects. If cleanup is needed, do not implement broad deletion without explicit product requirements and user approval.
+
+## Security And Release Notes
+
+- `app.js` contains the cloud environment id, but Tencent credentials must remain only in cloud-function environment variables.
+- `project.config.json` currently has `"urlCheck": false`; treat this as development convenience. Revisit before release if the app starts using network requests outside cloud APIs.
+- `project.config.json` currently uses `"libVersion": "trial"`; for release verification, test against a stable/base-library version supported by the target users.
+- Do not expose full OCR raw text, equipment storage dumps, or cached cloud data in logs unless actively debugging.
+- Keep `.gitignore` coverage for dependency folders, logs, private project config, and `.env*` files.
 
 ## Development Commands
 
@@ -85,6 +99,8 @@ Some existing Chinese text in source files appears as mojibake when read by stan
 - Build npm for Mini Program dependencies through WeChat DevTools after dependency changes.
 - Run the Mini Program in WeChat Developer Tools using `project.config.json`.
 - Regenerate game data: `update-data.bat`
+- Export cloud data payload: `npm run export:cloud-data`
+- Lightweight syntax checks for CommonJS modules: `node --check utils/calculator.js`, `node --check utils/cloudData.js`, and `node --check cloudfunctions/equipmentOcr/index.js`.
 - Root `npm test` is currently a placeholder and exits with an error. Do not claim tests pass based on it.
 
 ## WeChat Mini Program Conventions
@@ -103,6 +119,14 @@ Some existing Chinese text in source files appears as mojibake when read by stan
 - Do not introduce TypeScript, build tools, linters, or test frameworks unless requested.
 - Avoid broad formatting-only edits.
 - Keep UI labels and data keys consistent with existing game terminology.
+
+## Known Review Hotspots
+
+- `store/equipmentStore.js` is small but high impact. Watch for duplicated action definitions, direct nested MobX mutation that may not notify bindings, and stale `selectedEquipment` references after edit/delete.
+- `pages/equipment/equipment.js` is large and mixes CRUD, OCR parsing, scoring, calibration, and traversal. Keep changes very localized, and prefer extracting shared math into `utils/calculator.js` only when it is reused.
+- Equipment calibration and traversal have mirrored affix-to-form conversion rules. When changing one path, compare the other path for unit consistency, especially percent fields stored as decimals versus display percentages.
+- Saved configs and equipment data live in local storage. When changing schemas, provide backward-compatible normalization for old saved data.
+- Generated game data should be treated as runtime input: code must tolerate missing or stale cloud fields and fall back to local generated modules.
 
 ## Verification Checklist
 
