@@ -1,5 +1,9 @@
 <view wx:if="{{ui.currentTab === 'panel'}}" class="container">
   <view class="page-title">国际服全流派毕业度计算器</view>
+  <view class="data-source-banner {{dataSourceInfo.isLocalOnly ? 'data-source-banner-local' : ''}}">
+    <text class="data-source-banner-label">{{dataSourceInfo.label}}</text>
+    <text class="data-source-banner-meta" wx:if="{{dataSourceInfo.envVersion}}">{{dataSourceInfo.envVersion}}</text>
+  </view>
 
   <!-- ===== 面板页 ===== -->
   <view wx:if="{{ui.currentTab === 'panel'}}">
@@ -720,6 +724,15 @@
     </view>
   </view>
 
+  <view class="improve-ad-block">
+    <ad-custom
+      unit-id="adunit-ea01089e8d44294e"
+      bindload="adLoad"
+      binderror="adError"
+      bindclose="adClose"
+    ></ad-custom>
+  </view>
+
   <!-- 词条提升分析 -->
   <view class="other-block" style="padding-bottom: 10rpx;">
     <view class="other-block-title" style="font-size: 36rpx; color: #1677ff; font-weight: 700;">词条收益</view>
@@ -862,7 +875,7 @@
   <view class="other-block-title">关于</view>
   <view class="other-about-body">
     <view class="other-app-name">国际服全流派毕业度计算器</view>
-    <view class="other-version-badge">v3.3.0</view>
+    <view class="other-version-badge">v3.5.1</view>
   </view>
   <view class="other-entry-row" bindtap="openUpdatePopup">
     <view>
@@ -977,6 +990,13 @@
 >
   <text>存</text>
 </view>
+<view
+  wx:if="{{ui.currentTab === 'panel'}}"
+  class="share-poster-btn"
+  bindtap="handleGenerateSharePoster"
+>
+  <text>{{sharePosterGenerating ? '...' : '享'}}</text>
+</view>
 <!-- ===== 回到顶部按钮（面板页显示） ===== -->
 <view
   wx:if="{{ui.currentTab === 'panel'}}"
@@ -1021,5 +1041,22 @@
   >
     <text class="tab-icon">⚙️</text>
     <text class="tab-label">我的</text>
+  </view>
+</view>
+
+<canvas
+  class="share-poster-canvas"
+  canvas-id="sharePosterCanvas"
+  style="width:750px;height:1420px;"
+></canvas>
+
+<view wx:if="{{showSharePoster}}" class="share-poster-mask" catchtouchmove="noop">
+  <view class="share-poster-popup">
+    <view class="share-poster-title">分享图片</view>
+    <image class="share-poster-image" src="{{sharePosterPath}}" mode="widthFix" bindtap="previewSharePoster"></image>
+    <view class="share-poster-actions">
+      <button class="share-poster-secondary" bindtap="closeSharePoster">关闭</button>
+      <button class="share-poster-primary" bindtap="saveSharePoster">保存图片</button>
+    </view>
   </view>
 </view>

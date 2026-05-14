@@ -1437,6 +1437,14 @@ page {
   line-height: 1.5;
 }
 
+.ocr-limit-desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #0f766e;
+  line-height: 1.45;
+}
+
 .ocr-entry-action {
   margin-left: 18rpx;
   padding: 14rpx 18rpx;
@@ -1785,6 +1793,35 @@ page {
   max-width: 100%;
   white-space: normal;
   word-break: break-all;
+}
+
+.data-source-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin: 0 0 20rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(23, 59, 55, 0.08);
+  color: #465451;
+}
+
+.data-source-banner-local {
+  background: rgba(15, 118, 110, 0.14);
+  color: #0f766e;
+}
+
+.data-source-banner-label {
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.data-source-banner-meta {
+  font-size: 20rpx;
+  line-height: 1;
+  opacity: 0.8;
 }
 
 .flow-status-card {

@@ -13,6 +13,55 @@ const CURRENT_DOC_ID = 'current'
 const CACHE_KEY = 'cloudGameDataCache'
 
 let memoryCache = null
+let lastDataSourceInfo = {
+  source: 'local',
+  envVersion: '',
+  detail: null,
+}
+
+function getMiniProgramEnvVersion() {
+  try {
+    if (typeof wx !== 'undefined' && typeof wx.getAccountInfoSync === 'function') {
+      const accountInfo = wx.getAccountInfoSync()
+      const miniProgram = accountInfo && accountInfo.miniProgram
+      return miniProgram && miniProgram.envVersion ? miniProgram.envVersion : ''
+    }
+  } catch (err) {}
+  return ''
+}
+
+function shouldUseLocalGameDataOnly(options = {}) {
+  if (options.localOnly) return true
+  return getMiniProgramEnvVersion() === 'develop'
+}
+
+function setLastDataSourceInfo(source, detail) {
+  lastDataSourceInfo = {
+    source,
+    envVersion: getMiniProgramEnvVersion(),
+    detail: detail || null,
+  }
+}
+
+function getGameDataSourceInfo() {
+  const source = lastDataSourceInfo.source || 'local'
+  const envVersion = lastDataSourceInfo.envVersion || getMiniProgramEnvVersion()
+  const isLocalOnly = source === 'local-dev'
+  const labelMap = {
+    'local-dev': '本地数据模式',
+    cloud: '云端数据',
+    cache: '缓存数据',
+    local: '本地兜底数据',
+  }
+
+  return {
+    source,
+    envVersion,
+    isLocalOnly,
+    label: labelMap[source] || '数据源未知',
+    detail: lastDataSourceInfo.detail || null,
+  }
+}
 
 function buildMap(list, key) {
   return (list || []).reduce((map, item) => {
@@ -56,6 +105,7 @@ function buildAxesMap(list) {
 }
 
 function getLocalGameData() {
+  setLastDataSourceInfo('local', null)
   return normalizeGameData({
     targets,
     schools,
@@ -76,6 +126,7 @@ function getLocalGameData() {
 }
 
 function readCachedGameData() {
+  if (typeof wx === 'undefined' || typeof wx.getStorageSync !== 'function') return null
   try {
     const cached = wx.getStorageSync(CACHE_KEY)
     if (cached && cached.data) return normalizeGameData(cached.data)
@@ -84,6 +135,7 @@ function readCachedGameData() {
 }
 
 function writeCachedGameData(data, meta) {
+  if (typeof wx === 'undefined' || typeof wx.setStorageSync !== 'function') return
   try {
     wx.setStorageSync(CACHE_KEY, {
       data,
@@ -93,18 +145,8 @@ function writeCachedGameData(data, meta) {
   } catch (err) {}
 }
 
-function logDataSource(source, detail) {
-  if (typeof console === 'undefined') return
-  const message = `[cloudData] using ${source} game data`
-  if (source === 'cloud') {
-    console.info(message, detail || {})
-  } else {
-    console.warn(message, detail || {})
-  }
-}
-
 function fetchCloudGameData() {
-  if (!wx.cloud || !wx.cloud.database) {
+  if (typeof wx === 'undefined' || !wx.cloud || !wx.cloud.database) {
     return Promise.reject(new Error('wx.cloud.database unavailable'))
   }
 
@@ -124,6 +166,13 @@ function fetchCloudGameData() {
 }
 
 function getGameData(options = {}) {
+  if (shouldUseLocalGameDataOnly(options)) {
+    const local = getLocalGameData()
+    memoryCache = local
+    setLastDataSourceInfo('local-dev', { envVersion: getMiniProgramEnvVersion() || 'unknown' })
+    return Promise.resolve(local)
+  }
+
   if (memoryCache && !options.forceRefresh) {
     return Promise.resolve(memoryCache)
   }
@@ -137,18 +186,18 @@ function getGameData(options = {}) {
     .then(({ data, rawData, meta }) => {
       memoryCache = data
       writeCachedGameData(rawData, meta)
-      logDataSource('cloud', meta)
+      setLastDataSourceInfo('cloud', meta)
       return data
     })
     .catch(err => {
       const detail = err && (err.errMsg || err.message || err)
       if (memoryCache) {
-        logDataSource('cache', detail)
+        setLastDataSourceInfo('cache', detail)
         return memoryCache
       }
       const local = getLocalGameData()
       memoryCache = local
-      logDataSource('local', detail)
+      setLastDataSourceInfo('local', detail)
       return local
     })
 }
@@ -158,4 +207,7 @@ module.exports = {
   CURRENT_DOC_ID,
   getGameData,
   getLocalGameData,
+  getGameDataSourceInfo,
+  getMiniProgramEnvVersion,
+  shouldUseLocalGameDataOnly,
 }

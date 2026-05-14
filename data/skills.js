@@ -125,7 +125,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重骑龙回马1段",
+    "skillName": "6重骑龙回马1段",
     "physicalRate": 3.1951,
     "physicalFixed": 432,
     "elementRate": 4.79265,
@@ -150,7 +150,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重骑龙回马2段",
+    "skillName": "6重骑龙回马2段",
     "physicalRate": 3.9051,
     "physicalFixed": 528,
     "elementRate": 5.85765,
@@ -175,7 +175,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重骑龙回马打满",
+    "skillName": "6重骑龙回马打满",
     "physicalRate": 7.1002,
     "physicalFixed": 960,
     "elementRate": 10.6503,
@@ -200,7 +200,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重神龙吐火一段",
+    "skillName": "6重神龙吐火一段",
     "physicalRate": 0.90673,
     "physicalFixed": 122.33,
     "elementRate": 1.360095,
@@ -225,7 +225,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重神龙吐火两段",
+    "skillName": "6重神龙吐火两段",
     "physicalRate": 1.81346,
     "physicalFixed": 244.67,
     "elementRate": 2.72019,
@@ -250,7 +250,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重神龙吐火爆燃每跳",
+    "skillName": "6重神龙吐火爆燃每跳",
     "physicalRate": 0.2953,
     "physicalFixed": 39,
     "elementRate": 0.2953,
@@ -275,7 +275,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重太白醉月1-4",
+    "skillName": "6重太白醉月1-4",
     "physicalRate": 1.023,
     "physicalFixed": 138,
     "elementRate": 1.5345,
@@ -300,7 +300,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重太白醉月5",
+    "skillName": "6重太白醉月5",
     "physicalRate": 1.705,
     "physicalFixed": 230,
     "elementRate": 2.5575,
@@ -325,7 +325,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重太白醉月爆炸",
+    "skillName": "6重太白醉月爆炸",
     "physicalRate": 0.7015,
     "physicalFixed": 94,
     "elementRate": 0.7015,
@@ -350,7 +350,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重金蟾腾跃震退",
+    "skillName": "6重金蟾腾跃震退",
     "physicalRate": 0.5405,
     "physicalFixed": 73,
     "elementRate": 0.81075,
@@ -375,7 +375,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重金蟾腾跃一段",
+    "skillName": "6重金蟾腾跃一段",
     "physicalRate": 3.2432,
     "physicalFixed": 438,
     "elementRate": 4.8648,
@@ -400,7 +400,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重金蟾腾跃毒",
+    "skillName": "6重金蟾腾跃毒",
     "physicalRate": 1.6216,
     "physicalFixed": 219,
     "elementRate": 1.6216,
@@ -425,7 +425,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重萧吟千浪AOE",
+    "skillName": "6重萧吟千浪AOE",
     "physicalRate": 3.897,
     "physicalFixed": 800,
     "elementRate": 5.8455,
@@ -450,7 +450,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重萧吟千浪首轮流星",
+    "skillName": "6重萧吟千浪首轮流星",
     "physicalRate": 1.4614,
     "physicalFixed": 300,
     "elementRate": 2.1921,
@@ -475,7 +475,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "5重箫吟千浪单次后续流星",
+    "skillName": "6重箫吟千浪单次后续流星",
     "physicalRate": 1.4614,
     "physicalFixed": 300,
     "elementRate": 2.1921,
@@ -500,7 +500,32 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀R蓄2段",
+    "skillName": "95陌枪特殊",
+    "physicalRate": 0.3227,
+    "physicalFixed": 74,
+    "elementRate": 0.4841,
+    "elementFixed": 41,
+    "extraMinPhysicalBonus": 0,
+    "extraMinPhysicalAttack": 0,
+    "extraMaxPhysicalBonus": 0,
+    "extraMaxPhysicalAttack": 0,
+    "extraInsightRate": 0,
+    "extraInsightDamage": 0,
+    "extraPerfectRate": 0,
+    "extraPerfectDamage": 0,
+    "correction": 1,
+    "extraDamageIncrease": 0,
+    "extraPhysicalPenetration": 0,
+    "chargeSkill": 0,
+    "type1": "武器",
+    "type2": "枪",
+    "attribute": "裂石",
+    "special": "",
+    "note": "",
+    "guaranteedInsight": 0
+  },
+  {
+    "skillName": "95陌刀R蓄2段",
     "physicalRate": 3.8964,
     "physicalFixed": 900,
     "elementRate": 5.8446,
@@ -525,7 +550,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀R蓄3段（2战意）",
+    "skillName": "95陌刀R蓄3段（2战意）",
     "physicalRate": 7.2362,
     "physicalFixed": 1671,
     "elementRate": 10.8543,
@@ -539,7 +564,7 @@ module.exports = [
     "extraPerfectRate": 0,
     "extraPerfectDamage": 0,
     "correction": 1,
-    "extraDamageIncrease": 0.16667,
+    "extraDamageIncrease": 0,
     "extraPhysicalPenetration": 0,
     "chargeSkill": 1,
     "type1": "武器",
@@ -550,7 +575,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀R蓄3段（1战意）",
+    "skillName": "95陌刀R蓄3段（1战意）",
     "physicalRate": 5.789,
     "physicalFixed": 1337,
     "elementRate": 8.6834,
@@ -564,7 +589,7 @@ module.exports = [
     "extraPerfectRate": 0,
     "extraPerfectDamage": 0,
     "correction": 1,
-    "extraDamageIncrease": 0.08333,
+    "extraDamageIncrease": 0,
     "extraPhysicalPenetration": 0,
     "chargeSkill": 1,
     "type1": "武器",
@@ -575,7 +600,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀R蓄3段（无战意）",
+    "skillName": "95陌刀R蓄3段（无战意）",
     "physicalRate": 4.8243,
     "physicalFixed": 1114,
     "elementRate": 7.2365,
@@ -600,7 +625,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀派生（2战意）",
+    "skillName": "95陌刀派生（2战意）",
     "physicalRate": 3.2921,
     "physicalFixed": 799,
     "elementRate": 4.938,
@@ -614,7 +639,7 @@ module.exports = [
     "extraPerfectRate": 0,
     "extraPerfectDamage": 0,
     "correction": 1,
-    "extraDamageIncrease": 0.5,
+    "extraDamageIncrease": 0,
     "extraPhysicalPenetration": 0,
     "chargeSkill": 1,
     "type1": "武器",
@@ -625,7 +650,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀派生（1战意）",
+    "skillName": "95陌刀派生（1战意）",
     "physicalRate": 2.634,
     "physicalFixed": 639,
     "elementRate": 3.9404,
@@ -639,7 +664,7 @@ module.exports = [
     "extraPerfectRate": 0,
     "extraPerfectDamage": 0,
     "correction": 1,
-    "extraDamageIncrease": 0.25,
+    "extraDamageIncrease": 0,
     "extraPhysicalPenetration": 0,
     "chargeSkill": 1,
     "type1": "武器",
@@ -650,7 +675,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90伞左蓄每秒",
+    "skillName": "95伞左蓄每秒",
     "physicalRate": 1.7173,
     "physicalFixed": 396,
     "elementRate": 2.576,
@@ -675,7 +700,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90伞Q",
+    "skillName": "95伞Q",
     "physicalRate": 2.3389,
     "physicalFixed": 541,
     "elementRate": 3.5084,
@@ -700,7 +725,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90扇Q(近距离命中)",
+    "skillName": "95扇Q(近距离命中)",
     "physicalRate": 0.9266,
     "physicalFixed": 215,
     "elementRate": 1.3899,
@@ -725,7 +750,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90丢伞",
+    "skillName": "95丢伞",
     "physicalRate": 0.51075,
     "physicalFixed": 118,
     "elementRate": 0.7661,
@@ -750,7 +775,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90不谢花",
+    "skillName": "95不谢花",
     "physicalRate": 1.0215,
     "physicalFixed": 236,
     "elementRate": 1.5323,
@@ -775,7 +800,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90扇～",
+    "skillName": "95扇～",
     "physicalRate": 1.2793,
     "physicalFixed": 296,
     "elementRate": 1.919,
@@ -800,7 +825,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90扇三连",
+    "skillName": "95扇三连",
     "physicalRate": 1.2473,
     "physicalFixed": 289,
     "elementRate": 1.8709,
@@ -825,7 +850,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90扇五连",
+    "skillName": "95扇五连",
     "physicalRate": 3.018,
     "physicalFixed": 698,
     "elementRate": 4.5271,
@@ -850,7 +875,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90扇左蓄",
+    "skillName": "95扇左蓄",
     "physicalRate": 1.9039,
     "physicalFixed": 440,
     "elementRate": 2.8558,
@@ -875,7 +900,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90伞重轻派生",
+    "skillName": "95伞重轻派生",
     "physicalRate": 1.6995,
     "physicalFixed": 393,
     "elementRate": 2.5492,
@@ -900,7 +925,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀普攻1",
+    "skillName": "95双刀普攻1",
     "physicalRate": 0.42,
     "physicalFixed": 98,
     "elementRate": 0.63,
@@ -925,7 +950,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀普攻2",
+    "skillName": "95双刀普攻2",
     "physicalRate": 0.4503,
     "physicalFixed": 105,
     "elementRate": 0.6755,
@@ -950,7 +975,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀普攻3",
+    "skillName": "95双刀普攻3",
     "physicalRate": 0.5767,
     "physicalFixed": 134,
     "elementRate": 0.865,
@@ -975,7 +1000,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀普攻4",
+    "skillName": "95双刀普攻4",
     "physicalRate": 0.5077,
     "physicalFixed": 118,
     "elementRate": 0.7615,
@@ -1000,7 +1025,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀红人普攻1",
+    "skillName": "95双刀红人普攻1",
     "physicalRate": 0.6467,
     "physicalFixed": 150,
     "elementRate": 0.97,
@@ -1025,7 +1050,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀红人普攻2",
+    "skillName": "95双刀红人普攻2",
     "physicalRate": 0.9007,
     "physicalFixed": 209,
     "elementRate": 1.351,
@@ -1050,7 +1075,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀红人普攻3",
+    "skillName": "95双刀红人普攻3",
     "physicalRate": 1.445,
     "physicalFixed": 335,
     "elementRate": 2.1675,
@@ -1075,7 +1100,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀红人普攻4",
+    "skillName": "95双刀红人普攻4",
     "physicalRate": 1.7353,
     "physicalFixed": 402,
     "elementRate": 2.603,
@@ -1100,7 +1125,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀红人普攻5",
+    "skillName": "95双刀红人普攻5",
     "physicalRate": 2.5337,
     "physicalFixed": 586,
     "elementRate": 3.8005,
@@ -1125,7 +1150,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90双刀Q",
+    "skillName": "95双刀Q",
     "physicalRate": 1.3543,
     "physicalFixed": 314,
     "elementRate": 2.0315,
@@ -1150,7 +1175,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90鼠鼠泥鱼",
+    "skillName": "95鼠鼠泥鱼",
     "physicalRate": 0.35,
     "physicalFixed": 0,
     "elementRate": 0.525,
@@ -1175,7 +1200,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90绳镖Q",
+    "skillName": "95绳镖Q",
     "physicalRate": 0.062,
     "physicalFixed": 14,
     "elementRate": 0.093,
@@ -1225,7 +1250,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九剑Q",
+    "skillName": "95九剑Q",
     "physicalRate": 2.72,
     "physicalFixed": 513,
     "elementRate": 4.0799,
@@ -1250,7 +1275,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九剑Q纵横剑",
+    "skillName": "95九剑Q纵横剑",
     "physicalRate": 0.75,
     "physicalFixed": 0,
     "elementRate": 1.14,
@@ -1275,7 +1300,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九剑特殊技",
+    "skillName": "95九剑特殊技",
     "physicalRate": 1.1775,
     "physicalFixed": 272,
     "elementRate": 1.7663,
@@ -1300,7 +1325,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九剑特殊技纵横剑",
+    "skillName": "95九剑特殊技纵横剑",
     "physicalRate": 0.6,
     "physicalFixed": 0,
     "elementRate": 0.9,
@@ -1325,7 +1350,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九剑R蓄3段",
+    "skillName": "95九剑R蓄3段",
     "physicalRate": 0.94,
     "physicalFixed": 217,
     "elementRate": 1.41,
@@ -1350,7 +1375,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九枪Q1段",
+    "skillName": "95九枪Q1段",
     "physicalRate": 0.321,
     "physicalFixed": 74,
     "elementRate": 0.4814,
@@ -1375,7 +1400,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九枪Q打满",
+    "skillName": "95九枪Q打满",
     "physicalRate": 2.14,
     "physicalFixed": 493,
     "elementRate": 3.2094,
@@ -1400,7 +1425,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九枪特殊技",
+    "skillName": "95九枪特殊技",
     "physicalRate": 1.7118,
     "physicalFixed": 396,
     "elementRate": 2.5677,
@@ -1425,7 +1450,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "86九枪特殊技一段",
+    "skillName": "95九枪特殊技一段",
     "physicalRate": 0.68472,
     "physicalFixed": 158.4,
     "elementRate": 1.02708,
@@ -1450,7 +1475,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "87九枪特殊技二段",
+    "skillName": "95九枪特殊技二段",
     "physicalRate": 1.02708,
     "physicalFixed": 237.6,
     "elementRate": 1.54062,
@@ -1475,7 +1500,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九枪R蓄打满",
+    "skillName": "95九枪R蓄打满",
     "physicalRate": 6.2226,
     "physicalFixed": 1436,
     "elementRate": 9.3339,
@@ -1500,7 +1525,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九枪R蓄刷新",
+    "skillName": "95九枪R蓄刷新",
     "physicalRate": 0.373356,
     "physicalFixed": 86.16,
     "elementRate": 0.560034,
@@ -1525,7 +1550,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90九枪R蓄5层",
+    "skillName": "95九枪R蓄5层",
     "physicalRate": 1.86678,
     "physicalFixed": 430.8,
     "elementRate": 2.80017,
@@ -1650,7 +1675,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑武学q1",
+    "skillName": "95无名剑武学q1",
     "physicalRate": 1.0252,
     "physicalFixed": 236,
     "elementRate": 1.5378,
@@ -1675,7 +1700,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑武学q2",
+    "skillName": "95无名剑武学q2",
     "physicalRate": 1.5378,
     "physicalFixed": 355,
     "elementRate": 2.3067,
@@ -1700,7 +1725,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑武学q3",
+    "skillName": "95无名剑武学q3",
     "physicalRate": 2.563,
     "physicalFixed": 592,
     "elementRate": 3.8446,
@@ -1725,7 +1750,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑蓄力1档",
+    "skillName": "95无名剑蓄力1档",
     "physicalRate": 1.5098,
     "physicalFixed": 349,
     "elementRate": 2.2647,
@@ -1750,7 +1775,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑蓄力2档",
+    "skillName": "95无名剑蓄力2档",
     "physicalRate": 3.2659,
     "physicalFixed": 755,
     "elementRate": 4.8988,
@@ -1775,7 +1800,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑蓄力多道剑气1",
+    "skillName": "95无名剑蓄力多道剑气1",
     "physicalRate": 1.3064,
     "physicalFixed": 302,
     "elementRate": 1.9595,
@@ -1800,7 +1825,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑蓄力多道剑气2",
+    "skillName": "95无名剑蓄力多道剑气2",
     "physicalRate": 1.5676,
     "physicalFixed": 362,
     "elementRate": 2.3514,
@@ -1825,7 +1850,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑蓄力多道剑气3",
+    "skillName": "95无名剑蓄力多道剑气3",
     "physicalRate": 1.8289,
     "physicalFixed": 422,
     "elementRate": 2.7434,
@@ -1850,7 +1875,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑蓄力多道剑气",
+    "skillName": "95无名剑蓄力多道剑气",
     "physicalRate": 4.7029,
     "physicalFixed": 1086,
     "elementRate": 7.0543,
@@ -1875,7 +1900,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名剑特殊技",
+    "skillName": "95无名剑特殊技",
     "physicalRate": 1.767,
     "physicalFixed": 409,
     "elementRate": 2.6505,
@@ -1900,7 +1925,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90无名枪武学技",
+    "skillName": "95无名枪武学技",
     "physicalRate": 0.5727,
     "physicalFixed": 133,
     "elementRate": 0.859,
@@ -1925,7 +1950,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90尘绳镖Q",
+    "skillName": "95尘绳镖Q",
     "physicalRate": 3.1423,
     "physicalFixed": 725,
     "elementRate": 4.7134,
@@ -1950,7 +1975,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90尘绳镖R123",
+    "skillName": "95尘绳镖R123",
     "physicalRate": 1.1132,
     "physicalFixed": 258,
     "elementRate": 1.6699,
@@ -1975,7 +2000,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90尘绳镖R45",
+    "skillName": "95尘绳镖R45",
     "physicalRate": 0.7834,
     "physicalFixed": 182,
     "elementRate": 1.1751,
@@ -2000,7 +2025,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90尘绳镖R67",
+    "skillName": "95尘绳镖R67",
     "physicalRate": 1.7237,
     "physicalFixed": 399,
     "elementRate": 2.5855,
@@ -2025,7 +2050,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90尘绳镖特殊技",
+    "skillName": "95尘绳镖特殊技",
     "physicalRate": 2.298,
     "physicalFixed": 531,
     "elementRate": 3.4471,
@@ -2075,7 +2100,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90尘伞完美Q",
+    "skillName": "95尘伞完美Q",
     "physicalRate": 1.8079,
     "physicalFixed": 417,
     "elementRate": 2.7118,
@@ -2100,7 +2125,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90尘伞共鸣",
+    "skillName": "95尘伞共鸣",
     "physicalRate": 0.5,
     "physicalFixed": 0,
     "elementRate": 0.75,
@@ -2125,7 +2150,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90均陌荡八荒",
+    "skillName": "95均陌荡八荒",
     "physicalRate": 1.8943,
     "physicalFixed": 438,
     "elementRate": 2.8414,
@@ -2150,7 +2175,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90均陌荡八荒极",
+    "skillName": "95均陌荡八荒极",
     "physicalRate": 3.5251,
     "physicalFixed": 815,
     "elementRate": 5.2876,
@@ -2175,7 +2200,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90均陌蓄力二档下劈",
+    "skillName": "95均陌蓄力二档下劈",
     "physicalRate": 0.8826,
     "physicalFixed": 204,
     "elementRate": 1.3239,
@@ -2200,7 +2225,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90均陌蓄力二档砸地",
+    "skillName": "95均陌蓄力二档砸地",
     "physicalRate": 2.0593,
     "physicalFixed": 475,
     "elementRate": 3.089,
@@ -2225,11 +2250,11 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90均陌蓄力三档下劈",
-    "physicalRate": 2.0305,
-    "physicalFixed": 470,
-    "elementRate": 3.0456,
-    "elementFixed": 262,
+    "skillName": "95均陌蓄力三档下劈",
+    "physicalRate": 1.8623,
+    "physicalFixed": 430,
+    "elementRate": 2.7934,
+    "elementFixed": 240,
     "extraMinPhysicalBonus": 0,
     "extraMinPhysicalAttack": 0,
     "extraMaxPhysicalBonus": 0,
@@ -2250,11 +2275,11 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90均陌蓄力三档砸地",
-    "physicalRate": 4.7375,
-    "physicalFixed": 1093,
-    "elementRate": 7.1063,
-    "elementFixed": 611,
+    "skillName": "95均陌蓄力三档砸地",
+    "physicalRate": 4.345,
+    "physicalFixed": 1002,
+    "elementRate": 6.5178,
+    "elementFixed": 561,
     "extraMinPhysicalBonus": 0,
     "extraMinPhysicalAttack": 0,
     "extraMaxPhysicalBonus": 0,
@@ -2275,7 +2300,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90均陌快蓄三档下劈",
+    "skillName": "95均陌快蓄三档下劈",
     "physicalRate": 2.3388,
     "physicalFixed": 540,
     "elementRate": 3.5082,
@@ -2300,7 +2325,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90均陌快蓄三档砸地",
+    "skillName": "95均陌快蓄三档砸地",
     "physicalRate": 5.4573,
     "physicalFixed": 1260,
     "elementRate": 8.1859,
@@ -2325,7 +2350,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀武学技滑铲",
+    "skillName": "95横刀武学技滑铲",
     "physicalRate": 1.2333,
     "physicalFixed": 286,
     "elementRate": 1.85,
@@ -2350,7 +2375,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀白刃杀将斩",
+    "skillName": "95横刀白刃杀将斩",
     "physicalRate": 1.4904,
     "physicalFixed": 345,
     "elementRate": 2.2356,
@@ -2375,7 +2400,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀白刃杀将刺",
+    "skillName": "95横刀白刃杀将刺",
     "physicalRate": 2.1319,
     "physicalFixed": 493,
     "elementRate": 3.1978,
@@ -2400,7 +2425,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀特殊技突进",
+    "skillName": "95横刀特殊技突进",
     "physicalRate": 0.3779,
     "physicalFixed": 87,
     "elementRate": 0.5669,
@@ -2425,7 +2450,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀特殊技刀光1",
+    "skillName": "95横刀特殊技刀光1",
     "physicalRate": 1.5117,
     "physicalFixed": 349,
     "elementRate": 2.2675,
@@ -2450,7 +2475,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀特殊技刀光2",
+    "skillName": "95横刀特殊技刀光2",
     "physicalRate": 1.8896,
     "physicalFixed": 436,
     "elementRate": 2.8344,
@@ -2475,7 +2500,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀轻蓄",
+    "skillName": "95横刀轻蓄",
     "physicalRate": 2.449,
     "physicalFixed": 565,
     "elementRate": 3.6736,
@@ -2500,7 +2525,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀轻击派生",
+    "skillName": "95横刀轻击派生",
     "physicalRate": 0.3823,
     "physicalFixed": 89,
     "elementRate": 0.5734,
@@ -2525,11 +2550,11 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀拨雪寻春",
-    "physicalRate": 2.69932,
-    "physicalFixed": 624,
-    "elementRate": 4.04885,
-    "elementFixed": 348.4,
+    "skillName": "95横刀拨雪寻春",
+    "physicalRate": 2.0764,
+    "physicalFixed": 480,
+    "elementRate": 3.1145,
+    "elementFixed": 268,
     "extraMinPhysicalBonus": 0,
     "extraMinPhysicalAttack": 0,
     "extraMaxPhysicalBonus": 0,
@@ -2538,7 +2563,7 @@ module.exports = [
     "extraInsightDamage": 0.21,
     "extraPerfectRate": 0,
     "extraPerfectDamage": 0,
-    "correction": 1,
+    "correction": 1.2,
     "extraDamageIncrease": 0.1,
     "extraPhysicalPenetration": 12,
     "chargeSkill": 0,
@@ -2546,11 +2571,11 @@ module.exports = [
     "type2": "横刀",
     "attribute": "裂石",
     "special": "",
-    "note": "",
+    "note": "横刀派生技增伤",
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀拨雪寻春强化",
+    "skillName": "95横刀拨雪寻春强化",
     "physicalRate": 3.5298,
     "physicalFixed": 816,
     "elementRate": 5.2947,
@@ -2575,7 +2600,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀安西军",
+    "skillName": "95横刀安西军",
     "physicalRate": 1.4,
     "physicalFixed": 0,
     "elementRate": 2.1,
@@ -2600,7 +2625,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀安西军下劈",
+    "skillName": "95陌刀安西军下劈",
     "physicalRate": 0.5,
     "physicalFixed": 0,
     "elementRate": 0.75,
@@ -2625,7 +2650,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀安西军跳劈",
+    "skillName": "95陌刀安西军跳劈",
     "physicalRate": 0.9,
     "physicalFixed": 0,
     "elementRate": 1.35,
@@ -2650,7 +2675,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90陌刀安西军荡八荒",
+    "skillName": "95陌刀安西军荡八荒",
     "physicalRate": 0.5,
     "physicalFixed": 0,
     "elementRate": 0.75,
@@ -2675,7 +2700,7 @@ module.exports = [
     "guaranteedInsight": 0
   },
   {
-    "skillName": "90横刀易武技",
+    "skillName": "95横刀易武技",
     "physicalRate": 0.6481,
     "physicalFixed": 151,
     "elementRate": 0.9722,

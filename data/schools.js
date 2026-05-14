@@ -2,7 +2,7 @@ module.exports = [
   {
     "schoolName": "鸣金虹",
     "mainElement": "鸣金",
-    "hiddenMainElementAttack": 51.5,
+    "hiddenMainElementAttack": 54.8,
     "notes": [
       "剑蓄力增伤",
       "N/A",
@@ -27,7 +27,7 @@ module.exports = [
   {
     "schoolName": "鸣金影",
     "mainElement": "鸣金",
-    "hiddenMainElementAttack": 51.5,
+    "hiddenMainElementAttack": 54.8,
     "notes": [
       "流血增伤",
       "N/A",
@@ -54,7 +54,7 @@ module.exports = [
   {
     "schoolName": "牵丝玉",
     "mainElement": "牵丝",
-    "hiddenMainElementAttack": 51.5,
+    "hiddenMainElementAttack": 54.8,
     "notes": [
       "伞特殊增伤",
       "伞武学增伤",
@@ -82,7 +82,7 @@ module.exports = [
   {
     "schoolName": "裂石威",
     "mainElement": "裂石",
-    "hiddenMainElementAttack": 51.5,
+    "hiddenMainElementAttack": 0,
     "notes": [
       "陌刀蓄力增伤",
       "N/A",
@@ -95,11 +95,11 @@ module.exports = [
       "移经易武",
       "断石之构",
       "征人归",
-      "抗造大法"
+      "抗造大法",
+      "穿喉诀"
     ],
     "axes": [
-      "6山河竞速轴",
-      "5山河皮影轴"
+      "6山河竞速轴"
     ],
     "martialBoost1Name": "陌刀武学增伤",
     "martialBoost2Name": "枪武学增伤",
@@ -109,7 +109,7 @@ module.exports = [
   {
     "schoolName": "裂石均",
     "mainElement": "裂石",
-    "hiddenMainElementAttack": 51.5,
+    "hiddenMainElementAttack": 54.8,
     "notes": [
       "横刀派生技增伤",
       "陌刀蓄力技增伤",
@@ -138,7 +138,7 @@ module.exports = [
   {
     "schoolName": "破竹风",
     "mainElement": "破竹",
-    "hiddenMainElementAttack": 51.5,
+    "hiddenMainElementAttack": 54.8,
     "notes": [
       "鼠鼠增伤",
       "强效轻击增伤",
@@ -164,7 +164,7 @@ module.exports = [
   {
     "schoolName": "破竹尘",
     "mainElement": "破竹",
-    "hiddenMainElementAttack": 51.5,
+    "hiddenMainElementAttack": 54.8,
     "notes": [
       "伞武学增伤",
       "N/A",

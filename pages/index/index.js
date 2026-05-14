@@ -2,7 +2,13 @@
 import { calcStore } from '../../store/calcStore';
 const app = getApp()
 const { createCalculator } = require('../../utils/calculator')
-const { getGameData, getLocalGameData } = require('../../utils/cloudData')
+const { getGameData, getLocalGameData, getGameDataSourceInfo } = require('../../utils/cloudData')
+const {
+  getLocalUserConfig,
+  normalizeManualSavedConfigs,
+  saveUserConfigPatch,
+  syncUserConfig
+} = require('../../utils/userConfigStorage')
 
 const localGameData = getLocalGameData()
 let targets = localGameData.targets
@@ -21,9 +27,8 @@ let affixList = localGameData.affixList
 
 const AUTO_SAVE_KEY = 'savedConfigs'
 const MANUAL_SAVE_KEY = 'manualSavedConfigs'
-const LAST_SAVED_KEY = 'lastSavedConfig'
+const WXACODE_IMAGE_PATH = '/images/wxacode.jpg'
 
-const MANUAL_SLOT_COUNT = 3
 const AUTO_SAVE_LIMIT = 3
 
 const defaultTargetName  = '91幽牙蛇影'
@@ -86,9 +91,13 @@ Page({
 
     savedConfigs: [],
     manualSavedConfigs: [null, null, null],
+    showSharePoster: false,
+    sharePosterPath: '',
+    sharePosterGenerating: false,
     showUpdatePopup: false,
     updateLogVersion: '',
-    updateLogContent: []
+    updateLogContent: [],
+    dataSourceInfo: getGameDataSourceInfo()
   },
 
   
@@ -241,6 +250,10 @@ Page({
   toggleResultDetail() { this.setData({ 'ui.showResultDetail':  !this.data.ui.showResultDetail  }) },
   togglePanelAnalysis(){ this.setData({ 'ui.showPanelAnalysis': !this.data.ui.showPanelAnalysis }) },
   toggleAllElements()  { this.setData({ 'ui.showAllElements':   !this.data.ui.showAllElements   }) },
+  noop() {},
+  adLoad() {},
+  adError() {},
+  adClose() {},
 
   // ─────────────────────────────────────────────
   // 生命周期
@@ -259,6 +272,7 @@ Page({
     this._shouldSaveOnNextCalculate = false
 
     getGameData().then(gameData => {
+      this.setData({ dataSourceInfo: getGameDataSourceInfo() })
       this.applyGameData(gameData)
       this.initCalculatorPage()
     })
@@ -308,8 +322,9 @@ Page({
     const targetIndex = this.getDefaultTargetIndex()
 
     const savedConfigs = wx.getStorageSync(AUTO_SAVE_KEY) || []
-    const manualSavedConfigs = this.getManualSavedConfigs()
-    const lastSavedConfig = wx.getStorageSync(LAST_SAVED_KEY)
+    const localUserConfig = getLocalUserConfig()
+    const manualSavedConfigs = normalizeManualSavedConfigs(localUserConfig.manualSavedConfigs)
+    const lastSavedConfig = localUserConfig.lastSavedConfig
 
     const currentSchool = this.buildCurrentSchool(this.data.schools[defaultSchoolIndex])
     const currentTarget = this.data.targets[targetIndex] || {}
@@ -323,9 +338,9 @@ Page({
     app.calcStore.setCurrentAxis(defaultAxis);
     app.equipmentStore.setCurrentSchool(currentSchool) ;
 
-    const savedData = wx.getStorageSync('equipmentData')
+    const savedData = localUserConfig.equipmentData
     if (savedData?.basePanel) {
-    app.equipmentStore.setBasePanel(savedData.basePanel)
+    app.equipmentStore.setBasePanel(savedData.basePanel, savedData.basePanelMeta || null)
     }
 
     this.setData({
@@ -352,7 +367,35 @@ Page({
       } else {
         this.calculate()
       }
+      this.syncCloudUserConfig()
     })
+  },
+
+  async syncCloudUserConfig() {
+    if (this._syncingCloudUserConfig) return
+    this._syncingCloudUserConfig = true
+
+    try {
+      const result = await syncUserConfig()
+      const cloudConfig = result.source === 'cloud' ? result.data : null
+      if (!cloudConfig) return
+
+      const manualSavedConfigs = normalizeManualSavedConfigs(cloudConfig.manualSavedConfigs || this.data.manualSavedConfigs || [])
+      this.setData({ manualSavedConfigs })
+
+      if (cloudConfig.equipmentData?.basePanel) {
+        app.equipmentStore.setBasePanel(
+          cloudConfig.equipmentData.basePanel,
+          cloudConfig.equipmentData.basePanelMeta || null
+        )
+      }
+
+      if (cloudConfig.lastSavedConfig) {
+        this.applyConfig(cloudConfig.lastSavedConfig, { showToast: false })
+      }
+    } finally {
+      this._syncingCloudUserConfig = false
+    }
   },
 
   onUnload() {
@@ -808,8 +851,8 @@ Page({
 
       const mainMinKey = elementMinKeyMap[mainElement]
       const mainMaxKey = elementMaxKeyMap[mainElement]
-      if (mainMinKey && num(mainMinKey) > 300) warn(`${mainElement}最小属攻超过 300，建议减少本系最小属攻以优化词条分配`)
-      if (mainMaxKey && num(mainMaxKey) > 650) warn(`${mainElement}最大属攻超过 650，建议减少本系最大属攻以优化词条分配`)
+      if (mainMinKey && num(mainMinKey) > 300) warn(`${mainElement}最小属攻超过 330，建议减少本系最小属攻以优化词条分配`)
+      if (mainMaxKey && num(mainMaxKey) > 650) warn(`${mainElement}最大属攻超过 800，建议减少本系最大属攻以优化词条分配`)
       if (num('martialBoostValue1') === 0) warn('武学增效数值为 0，建议提高武学增效以提升总体伤害')
       if (num('bossBonus') === 0) warn('首领增伤为 0，建议提高首领增伤')
 
@@ -1016,20 +1059,27 @@ Page({
   },
 
   getManualSavedConfigs() {
-    const saved = wx.getStorageSync(MANUAL_SAVE_KEY) || []
-    const normalized = Array.from({ length: MANUAL_SLOT_COUNT }, (_, index) => saved[index] || null)
-    return normalized
+    return normalizeManualSavedConfigs(wx.getStorageSync(MANUAL_SAVE_KEY) || [])
   },
 
   setManualSavedConfigs(list) {
-    const normalized = Array.from({ length: MANUAL_SLOT_COUNT }, (_, index) => list[index] || null)
-    wx.setStorageSync(MANUAL_SAVE_KEY, normalized)
+    const normalized = normalizeManualSavedConfigs(list)
+    saveUserConfigPatch({ manualSavedConfigs: normalized })
     this.setData({ manualSavedConfigs: normalized })
   },
 
   setLastSavedConfig(config) {
     if (!config) return
-    wx.setStorageSync(LAST_SAVED_KEY, config)
+    saveUserConfigPatch({ lastSavedConfig: config })
+  },
+
+  setManualSavedConfigsWithLast(list, config) {
+    const normalized = normalizeManualSavedConfigs(list)
+    saveUserConfigPatch({
+      manualSavedConfigs: normalized,
+      lastSavedConfig: config
+    })
+    this.setData({ manualSavedConfigs: normalized })
   },
 
   buildCurrentConfig(result, axisResult, saveType = 'auto', manualSlot = null) {
@@ -1133,8 +1183,7 @@ Page({
     if (emptyIndex !== -1) {
       config.manualSlot = emptyIndex
       manualSavedConfigs[emptyIndex] = config
-      this.setManualSavedConfigs(manualSavedConfigs)
-      this.setLastSavedConfig(config)
+      this.setManualSavedConfigsWithLast(manualSavedConfigs, config)
       wx.showToast({ title: `已保存到栏位${emptyIndex + 1}`, icon: 'success' })
       return
     }
@@ -1155,11 +1204,259 @@ Page({
   
             const latestList = this.getManualSavedConfigs()
             latestList[replaceIndex] = config
-            this.setManualSavedConfigs(latestList)
-            this.setLastSavedConfig(config)
+            this.setManualSavedConfigsWithLast(latestList, config)
             wx.showToast({ title: `已替换栏位${replaceIndex + 1}`, icon: 'success' })
           }
         })
+      }
+    })
+  },
+
+  getSharePosterSummary() {
+    const form = this.data.form || {}
+    const school = this.data.currentSchool || {}
+    const axis = this.data.currentAxis || {}
+    const target = this.data.currentTarget || {}
+    const axisResult = this.data.axisResult || {}
+    const notes = school.notes || []
+    const selectedMentalities = (this.data.selectedMentalities || [])
+      .map(item => String(item || '').trim())
+      .filter(Boolean)
+    const fixedMentality = String(school.fixedMentality || school.fixedMentalityText || '').trim()
+    const mentalities = [
+      ...(fixedMentality && fixedMentality !== '无' ? [fixedMentality] : []),
+      ...selectedMentalities
+    ].join('/')
+    const physicalMinAttack = Number(form.physicalMinAttack || 0)
+    const physicalMaxAttack = Number(form.physicalMaxAttack || 0)
+    const physicalAttack = physicalMinAttack > physicalMaxAttack
+      ? `${form.physicalMinAttack || 0}（小外流固定外功）`
+      : `${form.physicalMinAttack || 0} / ${form.physicalMaxAttack || 0}`
+    const martialBoosts = [
+      {
+        name: school.martialBoost1Name || '武学增效1',
+        value: form.martialBoostValue1 || '0'
+      },
+      {
+        name: school.martialBoost2Name || '武学增效2',
+        value: form.martialBoostValue2 || '0'
+      }
+    ].filter(item => item.name && item.value !== '0')
+
+    return {
+      title: '燕云国际服毕业度面板',
+      schoolName: school.schoolName || '未选择',
+      axisName: axis.axisName || axisResult.axisName || '无',
+      targetName: target.targetName || '未选择',
+      mentalities: mentalities || '无',
+      physicalAttack,
+      rates: [
+        { label: '精准', value: Number(form.precisionRate || 0), max: 100 },
+        { label: '会心', value: Number(form.insightRate || 0), max: 80 },
+        { label: '会意', value: Number(form.perfectRate || 0), max: 40 },
+      ],
+      bossBonus: `${form.bossBonus || 0}%`,
+      allMartialBonus: `${form.allMartialBonus || 0}%`,
+      martialBoosts: martialBoosts.length
+        ? martialBoosts.map(item => `${item.name} ${item.value}%`).join(' / ')
+        : '无',
+      notes: [
+        notes[0] && notes[0] !== 'N/A' ? `${notes[0]} ${form.noteValue1 || 0}%` : '',
+        notes[1] && notes[1] !== 'N/A' ? `${notes[1]} ${form.noteValue2 || 0}%` : '',
+        notes[2] && notes[2] !== 'N/A' ? `${notes[2]} ${form.noteValue3 || 0}%` : '',
+      ].filter(Boolean).join(' / ') || '无',
+      graduateRate: axisResult.graduateRate || '—',
+      dps: axisResult.dps || '—',
+    }
+  },
+
+  drawPosterRoundRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath()
+    ctx.moveTo(x + radius, y)
+    ctx.lineTo(x + width - radius, y)
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+    ctx.lineTo(x + width, y + height - radius)
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+    ctx.lineTo(x + radius, y + height)
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+    ctx.lineTo(x, y + radius)
+    ctx.quadraticCurveTo(x, y, x + radius, y)
+    ctx.closePath()
+  },
+
+  drawPosterText(ctx, text, x, y, options = {}) {
+    ctx.setFillStyle(options.color || '#17201f')
+    ctx.setFontSize(options.size || 28)
+    ctx.setTextAlign(options.align || 'left')
+    ctx.setTextBaseline('top')
+    if (options.bold) {
+      ctx.font = `normal bold ${options.size || 28}px sans-serif`
+    }
+    ctx.fillText(String(text || ''), x, y)
+    if (options.bold) {
+      ctx.font = `normal normal ${options.size || 28}px sans-serif`
+    }
+  },
+
+  drawPosterWrappedText(ctx, text, x, y, maxChars, lineHeight, options = {}) {
+    const value = String(text || '')
+    const lines = []
+    for (let start = 0; start < value.length; start += maxChars) {
+      lines.push(value.slice(start, start + maxChars))
+    }
+    lines.forEach((line, index) => {
+      this.drawPosterText(ctx, line, x, y + index * lineHeight, options)
+    })
+    return y + Math.max(lines.length, 1) * lineHeight
+  },
+
+  drawPosterMetric(ctx, label, value, x, y, width) {
+    ctx.setFillStyle('#f6f1e7')
+    this.drawPosterRoundRect(ctx, x, y, width, 104, 18)
+    ctx.fill()
+    this.drawPosterText(ctx, label, x + 24, y + 18, { color: '#66736f', size: 24 })
+    this.drawPosterText(ctx, value, x + 24, y + 52, { color: '#0f766e', size: 34, bold: true })
+  },
+
+  drawPosterRow(ctx, label, value, y) {
+    this.drawPosterText(ctx, label, 74, y, { color: '#66736f', size: 25 })
+    return this.drawPosterWrappedText(ctx, value, 220, y, 19, 34, { color: '#17201f', size: 26 })
+  },
+
+  drawPosterProgressBar(ctx, x, y, width, height, percent) {
+    const radius = height / 2
+    const safePercent = Math.max(0, Math.min(1, percent || 0))
+    ctx.setFillStyle('#e9e2d4')
+    this.drawPosterRoundRect(ctx, x, y, width, height, radius)
+    ctx.fill()
+    if (safePercent <= 0) return
+    ctx.setFillStyle('#0f766e')
+    this.drawPosterRoundRect(ctx, x, y, Math.max(height, width * safePercent), height, radius)
+    ctx.fill()
+  },
+
+  drawPosterRateRows(ctx, rates, y) {
+    this.drawPosterText(ctx, '三率', 74, y, { color: '#66736f', size: 25 })
+    let currentY = y
+    ;(rates || []).forEach((item) => {
+      const value = Number(item.value || 0)
+      const max = Number(item.max || 100)
+      this.drawPosterText(ctx, `${item.label} ${value}%`, 220, currentY, { color: '#17201f', size: 26 })
+      this.drawPosterProgressBar(ctx, 220, currentY + 36, 390, 18, max > 0 ? value / max : 0)
+      this.drawPosterText(ctx, `${Math.min(100, Math.round((max > 0 ? value / max : 0) * 100))}%`, 626, currentY + 29, { color: '#66736f', size: 20 })
+      currentY += 70
+    })
+    return currentY
+  },
+
+  handleGenerateSharePoster() {
+    if (!this.data.axisResult) {
+      wx.showToast({ title: '请先完成一次计算', icon: 'none' })
+      return
+    }
+
+    this.setData({ sharePosterGenerating: true })
+    const summary = this.getSharePosterSummary()
+
+    wx.getImageInfo({
+      src: WXACODE_IMAGE_PATH,
+      success: (imageInfo) => {
+        const ctx = wx.createCanvasContext('sharePosterCanvas', this)
+        const width = 750
+        const height = 1420
+
+        ctx.setFillStyle('#f3f1ea')
+        ctx.fillRect(0, 0, width, height)
+
+        ctx.setFillStyle('#103b36')
+        this.drawPosterRoundRect(ctx, 34, 34, 682, 238, 28)
+        ctx.fill()
+        this.drawPosterText(ctx, summary.title, 72, 74, { color: '#fffdf8', size: 36, bold: true })
+        this.drawPosterText(ctx, `${summary.schoolName} · ${summary.axisName}`, 72, 128, { color: '#f4b04e', size: 44, bold: true })
+        this.drawPosterWrappedText(ctx, summary.targetName, 72, 194, 23, 32, { color: 'rgba(255,255,255,0.76)', size: 25 })
+
+        ctx.setFillStyle('#fffdf8')
+        this.drawPosterRoundRect(ctx, 34, 300, 682, 820, 24)
+        ctx.fill()
+        this.drawPosterMetric(ctx, '毕业度', summary.graduateRate, 74, 338, 282)
+        this.drawPosterMetric(ctx, '秒伤', summary.dps, 394, 338, 282)
+
+        let rowY = 486
+        rowY = this.drawPosterRow(ctx, '心法', summary.mentalities, rowY) + 24
+        rowY = this.drawPosterRow(ctx, '大小外', summary.physicalAttack, rowY) + 24
+        rowY = this.drawPosterRateRows(ctx, summary.rates, rowY) + 24
+        rowY = this.drawPosterRow(ctx, '首领增伤', summary.bossBonus, rowY) + 24
+        rowY = this.drawPosterRow(ctx, '武学增效', summary.martialBoosts, rowY) + 24
+        rowY = this.drawPosterRow(ctx, '全武学增效', summary.allMartialBonus, rowY) + 24
+        this.drawPosterRow(ctx, '定音', summary.notes, rowY)
+
+        ctx.setFillStyle('#fffdf8')
+        this.drawPosterRoundRect(ctx, 34, 1152, 682, 206, 24)
+        ctx.fill()
+        ctx.drawImage(WXACODE_IMAGE_PATH, 72, 1200, 110, 110)
+        this.drawPosterText(ctx, '燕云国际服全流派毕业度计算器', 214, 1192, { color: '#17201f', size: 30, bold: true })
+        this.drawPosterWrappedText(ctx, '扫码查看小程序，计算面板毕业度与装备搭配。', 214, 1248, 18, 40, { color: '#66736f', size: 25 })
+
+        ctx.draw(false, () => {
+          wx.canvasToTempFilePath({
+            canvasId: 'sharePosterCanvas',
+            width,
+            height,
+            destWidth: width,
+            destHeight: height,
+            success: (res) => {
+              this.setData({
+                showSharePoster: true,
+                sharePosterPath: res.tempFilePath,
+                sharePosterGenerating: false
+              })
+            },
+            fail: () => {
+              this.setData({ sharePosterGenerating: false })
+              wx.showToast({ title: '生成分享图失败', icon: 'none' })
+            }
+          }, this)
+        })
+      },
+      fail: () => {
+        this.setData({ sharePosterGenerating: false })
+        wx.showToast({ title: '小程序码图片读取失败', icon: 'none' })
+      }
+    })
+  },
+
+  closeSharePoster() {
+    this.setData({ showSharePoster: false })
+  },
+
+  previewSharePoster() {
+    if (!this.data.sharePosterPath) return
+    wx.previewImage({
+      urls: [this.data.sharePosterPath],
+      current: this.data.sharePosterPath
+    })
+  },
+
+  saveSharePoster() {
+    if (!this.data.sharePosterPath) return
+    wx.saveImageToPhotosAlbum({
+      filePath: this.data.sharePosterPath,
+      success: () => {
+        wx.showToast({ title: '已保存到相册', icon: 'success' })
+      },
+      fail: (err) => {
+        if (err && /auth|authorize/i.test(String(err.errMsg || ''))) {
+          wx.showModal({
+            title: '需要相册权限',
+            content: '请允许保存图片到相册后重试',
+            confirmText: '去设置',
+            success: (res) => {
+              if (res.confirm) wx.openSetting()
+            }
+          })
+          return
+        }
+        wx.showToast({ title: '保存失败', icon: 'none' })
       }
     })
   },

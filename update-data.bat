@@ -24,9 +24,10 @@ set SCRIPTS[4]=.\scripts\excelToAxes.js
 set SCRIPTS[5]=.\scripts\excelToBonuses.js
 set SCRIPTS[6]=.\scripts\excelToSets.js
 set SCRIPTS[7]=.\scripts\excelToAffixs.js
+set SCRIPTS[8]=.\scripts\export-cloud-data.js
 
 
-for /l %%n in (0,1,7) do (
+for /l %%n in (0,1,8) do (
   call :run "!SCRIPTS[%%n]!"
   if errorlevel 1 goto error
 )

@@ -1,6 +1,11 @@
 import { createStoreBindings } from 'mobx-miniprogram-bindings';
 const { createCalculator } = require('../../utils/calculator');
-const { getGameData, getLocalGameData } = require('../../utils/cloudData');
+const { getGameData, getLocalGameData, getGameDataSourceInfo } = require('../../utils/cloudData');
+const {
+  getLocalUserConfig,
+  saveUserConfigPatch,
+  syncUserConfig
+} = require('../../utils/userConfigStorage');
 const app = getApp()
 const { calcStore } = require('../../store/calcStore');
 
@@ -120,8 +125,16 @@ const QUALITY_NAME_MAP = {
 };
 
 const DEFAULT_EQUIPMENT_LEVEL = 91;
+const MAX_TRAVERSE_COMBINATIONS = 2000000;
 const ARMOR_SLOTS = ['hat', 'chest', 'leg', 'wrist'];
 const BASE_SLOTS = ['leftWeapon', 'rightWeapon', 'ring', 'pendant'];
+const OCR_USAGE_STORAGE_KEY = 'equipmentOcrUsage';
+const OCR_WEEKLY_FREE_LIMIT = 12;
+const OCR_REWARD_AMOUNT = 12;
+const OCR_MAX_USAGE_BALANCE = 60;
+const OCR_REWARDED_AD_UNIT_ID = 'adunit-58d95f2608e81840';
+
+let ocrRewardedVideoAd = null;
 
 const OCR_IGNORED_ATTR_KEYWORDS = [
   '气血最大值',
@@ -256,18 +269,28 @@ function applyComboToForm(combo, baseForm, tuneSkillMap) {
         // 这里直接枚举所有已知 baseAttrs 名称，确保与 doCalibration 对称
         const baseAttrMap = {
           '最小外功': 'physicalMinAttack',
+          '最小外功攻击': 'physicalMinAttack',
           '最大外功': 'physicalMaxAttack',
+          '最大外功攻击': 'physicalMaxAttack',
           '小外':     'physicalMinAttack',
           '大外':     'physicalMaxAttack',
           // 理论上 baseAttrs 只有外功/属攻基础值，但防御性地全量覆盖
           '最小鸣金': 'mingjinMin',
+          '最小鸣金攻击': 'mingjinMin',
           '最大鸣金': 'mingjinMax',
+          '最大鸣金攻击': 'mingjinMax',
           '最小裂石': 'lieshiMin',
+          '最小裂石攻击': 'lieshiMin',
           '最大裂石': 'lieshiMax',
+          '最大裂石攻击': 'lieshiMax',
           '最小牵丝': 'qiansiMin',
+          '最小牵丝攻击': 'qiansiMin',
           '最大牵丝': 'qiansiMax',
+          '最大牵丝攻击': 'qiansiMax',
           '最小破竹': 'pozhuMin',
+          '最小破竹攻击': 'pozhuMin',
           '最大破竹': 'pozhuMax',
+          '最大破竹攻击': 'pozhuMax',
         };
         const formKey = baseAttrMap[attrName];
         if (formKey && formKey in result) {
@@ -318,19 +341,20 @@ function applyComboToForm(combo, baseForm, tuneSkillMap) {
         continue;
       }
 
+      const convertedRateValue = getConvertedRateValue(rawValue, affix);
+
       // ── 精准率/会心率/会意率 带系数转换（与 resolveAffix 完全镜像）─
-      // 修复：这三个词条不能走普通映射路径（直接加值），
-      // 必须与 resolveAffix 一样乘以对应系数
+      // 使用数据表里的 convert/max 比例，避免硬编码系数与词条建议不一致。
       if (affix.name === '精准率') {
-        result['precisionRate'] = (result['precisionRate'] || 0) + rawValue * 0.9;
+        result['precisionRate'] = (result['precisionRate'] || 0) + convertedRateValue;
         continue;
       }
       if (affix.name === '会心率') {
-        result['insightRate'] = (result['insightRate'] || 0) + rawValue * 0.77;
+        result['insightRate'] = (result['insightRate'] || 0) + convertedRateValue;
         continue;
       }
       if (affix.name === '会意率') {
-        result['perfectRate'] = (result['perfectRate'] || 0) + rawValue * 0.77;
+        result['perfectRate'] = (result['perfectRate'] || 0) + convertedRateValue;
         continue;
       }
 
@@ -349,6 +373,15 @@ function applyComboToForm(combo, baseForm, tuneSkillMap) {
     finalForm[key] = result[key] === 0 ? '' : String(result[key]);
   }
   return finalForm;
+}
+
+function getConvertedRateValue(rawPercentValue, affix) {
+  const max = parseFloat(affix && affix.max);
+  const convert = parseFloat(affix && affix.convert);
+  if (Number.isFinite(max) && max !== 0 && Number.isFinite(convert)) {
+    return rawPercentValue * (convert / max);
+  }
+  return rawPercentValue;
 }
 
 function normalizeScoreForm(form) {
@@ -370,6 +403,12 @@ function cleanDisplayNumber(num, digits = 4) {
   const factor = Math.pow(10, digits);
   const rounded = Math.round((n + Number.EPSILON) * factor) / factor;
   return String(Object.is(rounded, -0) ? 0 : rounded);
+}
+
+function formatGraduateRate(rate) {
+  const n = parseFloat(rate);
+  if (isNaN(n)) return '0.00%';
+  return `${(n * 100).toFixed(2)}%`;
 }
 
 function formatAffixDisplayValue(affix) {
@@ -432,6 +471,47 @@ function normalizeCalcSnapshot(snapshot) {
     };
   }
   return snapshot || null;
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function buildCalibrationSignature(session) {
+  if (!session || !session.context || !session.panelInput) return '';
+  const context = session.context;
+  return stableStringify({
+    panelInput: session.panelInput,
+    currentSchool: context.currentSchool?.schoolName || '',
+    currentTarget: context.currentTarget?.targetName || context.currentTarget?.name || '',
+    currentSkill: context.currentSkill?.skillName || context.currentSkill?.name || '',
+    currentAxis: context.currentAxis?.axisName || '',
+    selectedSet: context.selectedSet || '',
+    selectedMentalities: context.selectedMentalities || [],
+    selectedTiangong: context.selectedTiangong || '',
+    selectedFood: context.selectedFood || '',
+  });
+}
+
+function buildBasePanelMeta(session) {
+  return {
+    sessionId: session?.id || '',
+    signature: buildCalibrationSignature(session),
+    timestamp: Date.now(),
+  };
+}
+
+function isBasePanelFreshForSession(meta, session) {
+  if (!meta || !session) return false;
+  if (meta.sessionId && meta.sessionId === session.id) return true;
+  const signature = buildCalibrationSignature(session);
+  return !!signature && meta.signature === signature;
 }
 
 function calculateDpsForAffixes(scoreContext, equipment, affixes) {
@@ -587,48 +667,70 @@ function groupEquipmentBySlot(equipmentList) {
   return map;
 }
 
-/**
- * 生成所有部位组合的笛卡尔积
- * @param {Array[]} groups - 每个部位的装备数组列表，顺序固定
- * @returns {Array[]} - 每个元素是一套装备（长度等于部位数）
- */
-function cartesianProduct(groups) {
-  return groups.reduce((acc, group) => {
-    const result = [];
-    for (const existing of acc) {
-      for (const item of group) {
-        result.push([...existing, item]);
-      }
-    }
-    return result;
-  }, [[]]);
+function getCombinationCount(groups) {
+  return groups.reduce((total, group) => total * group.length, 1);
 }
 
-/**
- * 分批异步执行，避免阻塞主线程
- * @param {Array}    tasks      - 任务数组
- * @param {number}   batchSize  - 每批数量
- * @param {function} processor  - (task) => result
- * @param {function} onProgress - (done, total) => void
- * @returns {Promise<Array>}
- */
-function runInBatches(tasks, batchSize, processor, onProgress) {
+function getOcrWeekKey(date = new Date()) {
+  const current = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const day = current.getDay() || 7;
+  current.setDate(current.getDate() + 4 - day);
+  const yearStart = new Date(current.getFullYear(), 0, 1);
+  const week = Math.ceil((((current - yearStart) / 86400000) + 1) / 7);
+  return `${current.getFullYear()}-${String(week).padStart(2, '0')}`;
+}
+
+function normalizeOcrUsage(saved) {
+  const currentWeek = getOcrWeekKey();
+  const rawRemaining = Number(saved && saved.remaining);
+  let remaining = Number.isFinite(rawRemaining) ? rawRemaining : OCR_WEEKLY_FREE_LIMIT;
+
+  if (!saved || saved.weekKey !== currentWeek) {
+    remaining = Math.max(remaining, OCR_WEEKLY_FREE_LIMIT);
+  }
+
+  remaining = Math.max(0, Math.min(OCR_MAX_USAGE_BALANCE, Math.floor(remaining)));
+
+  return {
+    weekKey: currentWeek,
+    remaining
+  };
+}
+
+function runCombinationsInBatches(groups, batchSize, processor, onProgress) {
   return new Promise(resolve => {
-    const results = [];
-    let index = 0;
+    const indexes = new Array(groups.length).fill(0);
+    const combo = new Array(groups.length);
+    let done = 0;
+    const total = getCombinationCount(groups);
+    let finished = total === 0;
+
+    function advanceIndexes() {
+      for (let i = groups.length - 1; i >= 0; i -= 1) {
+        indexes[i] += 1;
+        if (indexes[i] < groups[i].length) return true;
+        indexes[i] = 0;
+      }
+      return false;
+    }
 
     function nextBatch() {
-      const end = Math.min(index + batchSize, tasks.length);
-      while (index < end) {
-        results.push(processor(tasks[index]));
-        index++;
+      let processed = 0;
+      while (!finished && processed < batchSize) {
+        for (let i = 0; i < groups.length; i += 1) {
+          combo[i] = groups[i][indexes[i]];
+        }
+        processor(combo);
+        done += 1;
+        processed += 1;
+        finished = !advanceIndexes();
       }
-      onProgress && onProgress(index, tasks.length);
+      onProgress && onProgress(done, total);
 
-      if (index < tasks.length) {
+      if (!finished) {
         setTimeout(nextBatch, 0);  // 让出主线程
       } else {
-        resolve(results);
+        resolve();
       }
     }
     nextBatch();
@@ -646,6 +748,8 @@ Page({
     ocrRawText: '',
     ocrParsedResult: null,
     showOcrPreviewDialog: false,   
+    ocrRemainingCount: OCR_WEEKLY_FREE_LIMIT,
+    ocrMaxUsageBalance: OCR_MAX_USAGE_BALANCE,
     
     showAddDialog: false,
     showAffixDialog: false,
@@ -702,6 +806,7 @@ Page({
       basePanelText: '未校准基础面板',
       slotText: '装备候选未满 8 部位'
     },
+    dataSourceInfo: getGameDataSourceInfo(),
 
     isEditing: false,
     editingIndex: -1,
@@ -718,7 +823,9 @@ Page({
   },
 
   onLoad() {
+    this._pageActive = true;
     this.loadData();
+    this.loadOcrUsage();
     this._storeBindings = createStoreBindings(this, {
       store: app.equipmentStore,
       fields: [
@@ -727,6 +834,7 @@ Page({
         'equipmentList',
         'selectedEquipment',
         'basePanel',
+        'basePanelMeta',
         'currentSchool',
         'calcContextSnapshot'
       ],
@@ -736,18 +844,27 @@ Page({
         'clearAllEquipment',
         'selectEquipment',
         'setBasePanel',
+        'setBasePanelMeta',
         'setCurrentSchool'
       ]
     });
     getGameData().then(gameData => {
+      this.setData({ dataSourceInfo: getGameDataSourceInfo() });
       this.applyGameData(gameData);
       this.loadCurrentSchool();
       this.updateFilteredList();
+      this.syncCloudEquipmentData();
     });
   },
 
   onShow() {
+    this._pageActive = true;
+    this.loadOcrUsage();
     this.updateFilteredList();
+  },
+
+  onHide() {
+    this._pageActive = false;
   },
 
   applyGameData(gameData) {
@@ -764,21 +881,46 @@ Page({
   },
 
     onUnload() {
+      this._pageActive = false;
+      this.destroyOcrRewardedVideoAd();
       if (this._storeBindings) {
         this._storeBindings.destroyStoreBindings();
     }
   },
 
   loadData() {
-    const saved = wx.getStorageSync('equipmentData');
+    const saved = getLocalUserConfig().equipmentData;
+    this.applyEquipmentData(saved);
+  },
+
+  applyEquipmentData(saved) {
     if (saved) {
       if (saved.equipmentList) {
         app.equipmentStore.equipmentList = saved.equipmentList;
       }
       if (saved.basePanel) {
-        app.equipmentStore.setBasePanel(saved.basePanel);
+        app.equipmentStore.setBasePanel(saved.basePanel, saved.basePanelMeta || null);
         this.setData({ basePanelDisplay: this.buildBasePanelDisplay(saved.basePanel) });
       }
+    }
+  },
+
+  async syncCloudEquipmentData() {
+    if (this._syncingCloudEquipmentData) return;
+    this._syncingCloudEquipmentData = true;
+
+    try {
+      const result = await syncUserConfig();
+      const cloudEquipmentData = result.source === 'cloud'
+        ? result.data && result.data.equipmentData
+        : null;
+
+      if (!cloudEquipmentData) return;
+
+      this.applyEquipmentData(cloudEquipmentData);
+      this.updateFilteredList();
+    } finally {
+      this._syncingCloudEquipmentData = false;
     }
   },
 
@@ -972,11 +1114,134 @@ confirmAddAffix() {
   },
 
   saveData() {
-    wx.setStorageSync('equipmentData', {
-      equipmentList: app.equipmentStore.equipmentList,
-      basePanel: app.equipmentStore.basePanel,
-      rawPanel: app.equipmentStore.rawPanel,
+    saveUserConfigPatch({
+      equipmentData: {
+        equipmentList: app.equipmentStore.equipmentList,
+        basePanel: app.equipmentStore.basePanel,
+        basePanelMeta: app.equipmentStore.basePanelMeta,
+        rawPanel: app.equipmentStore.rawPanel,
+      }
     });
+  },
+
+  loadOcrUsage() {
+    const usage = normalizeOcrUsage(wx.getStorageSync(OCR_USAGE_STORAGE_KEY));
+    wx.setStorageSync(OCR_USAGE_STORAGE_KEY, usage);
+    if (this._pageActive !== false) {
+      this.setData({ ocrRemainingCount: usage.remaining });
+    }
+    return usage;
+  },
+
+  saveOcrUsage(usage) {
+    const normalized = normalizeOcrUsage(usage);
+    wx.setStorageSync(OCR_USAGE_STORAGE_KEY, normalized);
+    if (this._pageActive !== false) {
+      this.setData({ ocrRemainingCount: normalized.remaining });
+    }
+    return normalized;
+  },
+
+  consumeOcrUsage() {
+    const usage = this.loadOcrUsage();
+    if (usage.remaining <= 0) return false;
+    this.saveOcrUsage({
+      ...usage,
+      remaining: usage.remaining - 1
+    });
+    return true;
+  },
+
+  refundOcrUsage() {
+    const usage = this.loadOcrUsage();
+    this.saveOcrUsage({
+      ...usage,
+      remaining: Math.min(OCR_MAX_USAGE_BALANCE, usage.remaining + 1)
+    });
+  },
+
+  rewardOcrUsage() {
+    const usage = this.loadOcrUsage();
+    const before = usage.remaining;
+    const nextRemaining = Math.min(OCR_MAX_USAGE_BALANCE, before + OCR_REWARD_AMOUNT);
+    this.saveOcrUsage({
+      ...usage,
+      remaining: nextRemaining
+    });
+    return nextRemaining - before;
+  },
+
+  initOcrRewardedVideoAd() {
+    if (!wx.createRewardedVideoAd || ocrRewardedVideoAd) return;
+
+    ocrRewardedVideoAd = wx.createRewardedVideoAd({
+      adUnitId: OCR_REWARDED_AD_UNIT_ID
+    });
+
+    this._ocrAdOnLoad = () => {};
+    this._ocrAdOnError = () => {
+      wx.showToast({ title: '广告暂不可用，请稍后重试', icon: 'none' });
+    };
+    this._ocrAdOnClose = res => {
+      if ((res && res.isEnded) || res === undefined) {
+        const added = this.rewardOcrUsage();
+        wx.showToast({
+          title: added > 0 ? `已补充${added}次` : '次数已达上限',
+          icon: 'none'
+        });
+      } else {
+        wx.showToast({ title: '完整观看广告后可补充次数', icon: 'none' });
+      }
+    };
+
+    ocrRewardedVideoAd.onLoad(this._ocrAdOnLoad);
+    ocrRewardedVideoAd.onError(this._ocrAdOnError);
+    ocrRewardedVideoAd.onClose(this._ocrAdOnClose);
+  },
+
+  destroyOcrRewardedVideoAd() {
+    if (!ocrRewardedVideoAd) return;
+    if (ocrRewardedVideoAd.offLoad && this._ocrAdOnLoad) {
+      ocrRewardedVideoAd.offLoad(this._ocrAdOnLoad);
+    }
+    if (ocrRewardedVideoAd.offError && this._ocrAdOnError) {
+      ocrRewardedVideoAd.offError(this._ocrAdOnError);
+    }
+    if (ocrRewardedVideoAd.offClose && this._ocrAdOnClose) {
+      ocrRewardedVideoAd.offClose(this._ocrAdOnClose);
+    }
+    this._ocrAdOnLoad = null;
+    this._ocrAdOnError = null;
+    this._ocrAdOnClose = null;
+    ocrRewardedVideoAd = null;
+  },
+
+  showOcrRewardedVideoAd() {
+    if (this.data.ocrRemainingCount >= OCR_MAX_USAGE_BALANCE) {
+      wx.showToast({ title: '次数已达上限', icon: 'none' });
+      return;
+    }
+
+    if (!ocrRewardedVideoAd) {
+      this.initOcrRewardedVideoAd();
+    }
+
+    if (!ocrRewardedVideoAd) {
+      wx.showToast({ title: '当前基础库不支持激励广告', icon: 'none' });
+      return;
+    }
+
+    ocrRewardedVideoAd.show().catch(() => {
+      ocrRewardedVideoAd.load()
+        .then(() => ocrRewardedVideoAd.show())
+        .catch(() => {
+          wx.showToast({ title: '广告暂不可用，请稍后重试', icon: 'none' });
+        });
+    });
+  },
+
+  handleWatchOcrAd() {
+    this.showOcrRewardedVideoAd();
   },
 
   // 筛选器
@@ -1083,58 +1348,25 @@ confirmAddAffix() {
     });
   },
 
-  async testEquipmentOcr() {
-    try {
-      const chooseRes = await wx.chooseMedia({
-        count: 1,
-        mediaType: ['image'],
-        sourceType: ['album', 'camera'],
-        sizeType: ['compressed']
-      })
-  
-      const filePath = chooseRes.tempFiles[0].tempFilePath
-  
-      wx.showLoading({
-        title: '上传中...',
-        mask: true
-      })
-  
-      const uploadRes = await wx.cloud.uploadFile({
-        cloudPath: `equipment-ocr/${Date.now()}.jpg`,
-        filePath
-      })
-  
-      wx.showLoading({
-        title: '识别中...',
-        mask: true
-      })
-  
-      const res = await wx.cloud.callFunction({
-        name: 'equipmentOcr',
-        data: {
-          fileID: uploadRes.fileID
-        }
-      })
-  
-      wx.hideLoading()
-  
-      wx.showModal({
-        title: 'OCR识别结果',
-        content: res.result?.rawText || res.result?.message || '无识别结果',
-        showCancel: false
-      })
-    } catch (err) {
-      wx.hideLoading()
-      wx.showToast({
-        title: '识别失败',
-        icon: 'none'
-      })
-    }
-  },
-
   // 选择游戏截图并识别装备
 async handleOcrAddEquipment() {
+  let usageConsumed = false
+
   try {
+    if (this.data.ocrLoading) return
+
+    if (this.loadOcrUsage().remaining <= 0) {
+      wx.showModal({
+        title: 'OCR次数不足',
+        content: '每周可免费使用12次。观看完整激励广告可补充12次，最多同时拥有60次。',
+        confirmText: '看广告',
+        cancelText: '稍后'
+      }).then(res => {
+        if (res.confirm) this.showOcrRewardedVideoAd()
+      })
+      return
+    }
+
     this.setData({ ocrLoading: true })
     const chooseRes = await wx.chooseMedia({
       count: 1,
@@ -1165,6 +1397,13 @@ async handleOcrAddEquipment() {
       filePath: file.tempFilePath
     })
 
+    if (!this.consumeOcrUsage()) {
+      wx.hideLoading()
+      wx.showToast({ title: 'OCR次数不足', icon: 'none' })
+      return
+    }
+    usageConsumed = true
+
     const ocrRes = await wx.cloud.callFunction({
       name: 'equipmentOcr',
       data: {
@@ -1177,6 +1416,10 @@ async handleOcrAddEquipment() {
     const result = ocrRes.result || {}
 
     if (result.code !== 0) {
+      if (usageConsumed) {
+        this.refundOcrUsage()
+        usageConsumed = false
+      }
       wx.showToast({
         title: result.message || '识别失败',
         icon: 'none'
@@ -1199,6 +1442,9 @@ async handleOcrAddEquipment() {
 
     this.fillOcrEquipmentToDialog(parsed, rawText)
   } catch (err) {
+    if (typeof usageConsumed !== 'undefined' && usageConsumed) {
+      this.refundOcrUsage()
+    }
     wx.hideLoading()
     wx.showToast({ title: 'OCR 添加失败', icon: 'none' })
   } finally {
@@ -1898,6 +2144,10 @@ fillOcrEquipmentToDialog(parsed, rawText) {
   const slotIndex = SLOTS.findIndex(s => s.key === parsed.slot)
   const qualityIndex = parsed.quality === 'purple' ? 0 : 1
   const levelIndex = this.data.levelOptions.indexOf(parsed.level)
+  const affixes = (parsed.affixes || []).map(affix => ({
+    ...affix,
+    displayValue: formatAffixDisplayValue(affix),
+  }))
 
   this.setData({
     ocrRawText: rawText,
@@ -1923,7 +2173,7 @@ fillOcrEquipmentToDialog(parsed, rawText) {
       quality: parsed.quality,
       level: parsed.level,
       baseAttrs: parsed.baseAttrs,
-      affixes: parsed.affixes,
+      affixes,
       tuneSkill: parsed.tuneSkill,
       tuneSkillValue: parsed.tuneSkillValue || '',
     }
@@ -2238,6 +2488,10 @@ removeAffix(e) {
     const tuneSkillValue = equip.tuneSkill?.value ?? '';
     const isNA = tuneSkillName === 'N/A';
     const tuneNeedValue = !isNA && tuneSkillName !== null;
+    const affixes = (equip.affixes || []).map(affix => ({
+      ...affix,
+      displayValue: formatAffixDisplayValue(affix),
+    }));
   
     this.setData({
       showDetailDialog: false,
@@ -2254,6 +2508,7 @@ removeAffix(e) {
   
       newEquipment: {
         ...equip,
+        affixes,
         tuneSkill: tuneSkillName,
         tuneSkillValue: String(tuneSkillValue),
       }
@@ -2404,6 +2659,7 @@ removeAffix(e) {
     wx.showToast({ title: '会话面板数据异常，请重新计算', icon: 'none' });
     return;
   }
+  const calibrationSchool = session.context?.currentSchool || {};
   
 
   // 全部转 float，方便运算
@@ -2420,9 +2676,11 @@ removeAffix(e) {
     
         // ── 外功攻击 ──────────────────────────────────
         case '最小外功':
+        case '最小外功攻击':
         case '小外':
           return { physicalMinAttack: v };
         case '最大外功':
+        case '最大外功攻击':
         case '大外':
           return { physicalMaxAttack: v };
     
@@ -2484,15 +2742,20 @@ removeAffix(e) {
     
         // ── 精准 会心 会意 ────────────────────────────
         case '精准率':
-          return { precisionRate: v * 0.9 };
+          return { precisionRate: getConvertedRateValue(v, equip) };
         case '会心率':
-          return { insightRate: v * 0.77 };
+          return { insightRate: getConvertedRateValue(v, equip) };
         case '会意率':
-          return { perfectRate: v * 0.77 };
+          return { perfectRate: getConvertedRateValue(v, equip) };
     
         // ── 加成 ──────────────────────────────────────
         case '属攻伤害加成':  return { elementBonus: v };
         case '外功伤害加成':  return { physicalBonus: v };
+        case '直接会心率': return { directInsightRate: v };
+        case '直接会意率': return { directPerfectRate: v };
+        case '会心伤害加成': return { insightDamageBonus: v };
+        case '会意伤害加成': return { perfectDamageBonus: v };
+        case '总增伤': return { damageIncrease: v };
         case '单体控制':  return { singleControlBonus: v };
         case '单体爆发':  return { singleBurstBonus: v };
         case '群体伤害':  return { groupDamageBonus: v };
@@ -2537,13 +2800,12 @@ removeAffix(e) {
         ? (parseFloat(affix.value) || 0) * 100
         : (parseFloat(affix.value) || 0);
 
-      const delta = resolveAffix(affix.name, rawVal);
+      const delta = resolveAffix(affix.name, rawVal, affix);
       if (Object.keys(delta).length > 0) {
         Object.entries(delta).forEach(([k, dv]) => accum(k, dv));
       } else {
         // resolveAffix 未识别，尝试匹配流派定音技
-        const currentSchool = this.data.currentSchool || {};
-        const notes      = currentSchool.notes || [];
+        const notes      = calibrationSchool.notes || [];
         const noteFields = ['noteValue1', 'noteValue2', 'noteValue3'];
         const matchIndex = notes.findIndex(n => n && n !== 'N/A' && n === affix.name);
         if (matchIndex >= 0) {
@@ -2558,13 +2820,12 @@ removeAffix(e) {
       const tuneValue = parseFloat(equip.tuneSkill.value) || 0;
 
       // 先尝试 resolveAffix（覆盖穿透等直接面板词条）
-      const directDelta = resolveAffix(tuneName, tuneValue);
+      const directDelta = resolveAffix(tuneName, tuneValue, equip.tuneSkill);
       if (Object.keys(directDelta).length > 0) {
         Object.entries(directDelta).forEach(([k, dv]) => accum(k, dv));
       } else {
         // 识别不到，尝试匹配流派定音技（如伞特殊增伤、剑蓄力增伤）
-        const currentSchool = this.data.currentSchool || {};
-        const notes      = currentSchool.notes || [];
+        const notes      = calibrationSchool.notes || [];
         const noteFields = ['noteValue1', 'noteValue2', 'noteValue3'];
         const matchIndex = notes.findIndex(n => n && n !== 'N/A' && n === tuneName);
         if (matchIndex >= 0) {
@@ -2586,7 +2847,7 @@ removeAffix(e) {
     resultPanel[k] = v === 0 ? '' : String(v);
   });
 
-  app.equipmentStore.setBasePanel(resultPanel);
+  app.equipmentStore.setBasePanel(resultPanel, buildBasePanelMeta(session));
   this.saveData();
 
   this.setData({
@@ -2609,6 +2870,13 @@ removeAffix(e) {
     const basePanel = this.data.basePanel;
     if (!basePanel || Object.keys(basePanel).length === 0) {
       wx.showToast({ title: '请先校准基础面板', icon: 'none' });
+      return;
+    }
+
+    const currentSession = calcStore.getCalcSession && calcStore.getCalcSession();
+    const basePanelMeta = this.data.basePanelMeta || app.equipmentStore.basePanelMeta;
+    if (!isBasePanelFreshForSession(basePanelMeta, currentSession)) {
+      wx.showToast({ title: '基础面板已过期，请重新校准', icon: 'none', duration: 3000 });
       return;
     }
 
@@ -2656,9 +2924,16 @@ removeAffix(e) {
     }
   
     // ── 构建组合 ──────────────────────────────────────────────────
-    const groups       = SLOT_KEYS.map(key => slotMap[key]);
-    const combinations = cartesianProduct(groups);
-    const total        = combinations.length;
+    const groups = SLOT_KEYS.map(key => slotMap[key]);
+    const total = getCombinationCount(groups);
+    if (total > MAX_TRAVERSE_COMBINATIONS) {
+      wx.showToast({
+        title: `组合过多：${total}，请先筛选装备`,
+        icon: 'none',
+        duration: 3000
+      });
+      return;
+    }
   
     wx.showLoading({ title: `共 ${total} 种组合，计算中...`, mask: true });
   
@@ -2708,8 +2983,8 @@ removeAffix(e) {
     let bestCombo  = null;
     let bestOverrideForm = null;
   
-    await runInBatches(
-      combinations,
+    await runCombinationsInBatches(
+      groups,
       50,
       (combo) => {
         const rawOverrideForm = applyComboToForm(combo, baseForm, tuneSkillMap);
@@ -2745,9 +3020,8 @@ removeAffix(e) {
     // ── 写入结果 ──────────────────────────────────────────────────
     this.setData({
       traverseResult: {
-        graduateRate: bestRate > 1
-          ? `${bestRate.toFixed(2)}%`
-          : `${(bestRate * 100).toFixed(2)}%`,
+        graduateRate: formatGraduateRate(bestRate),
+        rawGraduateRate: bestRate,
         dps: bestDps > 0 ? bestDps.toFixed(2) : '0.00',
         combo: bestCombo.map((equip, i) => ({
           slot: SLOT_KEYS[i],

@@ -1,5 +1,9 @@
 <view class="container">
   <view class="page-title">装备库</view>
+  <view class="data-source-banner {{dataSourceInfo.isLocalOnly ? 'data-source-banner-local' : ''}}">
+    <text class="data-source-banner-label">{{dataSourceInfo.label}}</text>
+    <text class="data-source-banner-meta" wx:if="{{dataSourceInfo.envVersion}}">{{dataSourceInfo.envVersion}}</text>
+  </view>
 
   <view class="flow-status-card">
     <view class="flow-status-title">装备搭配流程</view>
@@ -70,6 +74,7 @@
         <text class="ocr-badge">Beta</text>
       </view>
       <text class="ocr-desc">上传装备截图，自动识别名称、部位、词条与定音技</text>
+      <text class="ocr-limit-desc">每周免费12次，剩余{{ocrRemainingCount}}/{{ocrMaxUsageBalance}}次；次数不足可看广告补充12次</text>
     </view>
   </view>
 
