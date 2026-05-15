@@ -405,6 +405,37 @@ page {
   box-shadow: 0 10rpx 24rpx rgba(22, 119, 255, 0.18);
 }
 
+.grand-panel-mode-switch {
+  display: flex;
+  gap: 10rpx;
+  padding: 8rpx;
+  margin-bottom: 18rpx;
+  background: #ffffff;
+  border: 1rpx solid rgba(15, 118, 110, 0.20);
+  border-radius: 16rpx;
+  box-sizing: border-box;
+}
+
+.grand-panel-mode-item {
+  flex: 1;
+  height: 56rpx;
+  line-height: 56rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #0f766e;
+  border: 1rpx solid rgba(15, 118, 110, 0.20);
+  box-sizing: border-box;
+}
+
+.grand-panel-mode-item.is-active {
+  background: #0f766e;
+  color: #ffffff;
+  border-color: #0f766e;
+  box-shadow: 0 6rpx 16rpx rgba(15, 118, 110, 0.16);
+}
+
 /* ===== 底部导航栏 ===== */
 .tab-bar {
   position: fixed;
@@ -602,6 +633,58 @@ page {
   color: #c0c8d6;
   padding: 0 8rpx;
   margin-bottom: 0;
+}
+
+.gp-outer-attack-card {
+  display: flex;
+  align-items: stretch;
+  gap: 14rpx;
+  min-height: 128rpx;
+  padding: 18rpx 20rpx;
+  background: #0f766e;
+  border-radius: 18rpx;
+  box-shadow: 0 10rpx 24rpx rgba(15, 118, 110, 0.16);
+  box-sizing: border-box;
+}
+
+.gp-outer-attack-card-single {
+  justify-content: center;
+}
+
+.gp-outer-attack-card-single .gp-outer-attack-value {
+  font-size: 48rpx;
+}
+
+.gp-outer-attack-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.gp-outer-attack-label {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.2;
+}
+
+.gp-outer-attack-value {
+  max-width: 100%;
+  font-size: 40rpx;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #ffffff;
+  word-break: break-all;
+  text-align: center;
+}
+
+.gp-outer-attack-divider {
+  width: 1rpx;
+  margin: 6rpx 0;
+  background: rgba(255, 255, 255, 0.24);
 }
 
 /* ===== 毕业面板：四属性三列展示 ===== */

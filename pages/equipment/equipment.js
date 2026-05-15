@@ -514,6 +514,14 @@ function isBasePanelFreshForSession(meta, session) {
   return !!signature && meta.signature === signature;
 }
 
+function hasCalibratedBasePanel(panel, meta, session) {
+  return !!(
+    panel
+    && Object.keys(panel).length > 0
+    && isBasePanelFreshForSession(meta, session)
+  );
+}
+
 function calculateDpsForAffixes(scoreContext, equipment, affixes) {
   const scoreEquip = {
     slot: equipment.slot,
@@ -1260,8 +1268,12 @@ confirmAddAffix() {
       || app.equipmentStore.calcContextSnapshot
       || session
     );
-    const basePanel = this.data.basePanel || app.equipmentStore.basePanel || session?.panelInput;
-    const scoreContext = createEquipmentScoreContext(snapshot, basePanel);
+    const basePanel = this.data.basePanel || app.equipmentStore.basePanel;
+    const basePanelMeta = this.data.basePanelMeta || app.equipmentStore.basePanelMeta;
+    const hasReadyBasePanel = hasCalibratedBasePanel(basePanel, basePanelMeta, session);
+    const scoreContext = hasReadyBasePanel
+      ? createEquipmentScoreContext(snapshot, basePanel)
+      : null;
     const list = app.equipmentStore.equipmentList.map(eq => {
       const displayEquip = normalizeEquipmentAffixDisplay(eq);
       return {
@@ -1285,13 +1297,14 @@ confirmAddAffix() {
       scoreStatusText: scoreContext
         ? validation.message
         : '请先在计算器计算并校准基础面板',
-      flowStatus: this.buildFlowStatus(snapshot, basePanel, list)
+      flowStatus: this.buildFlowStatus(snapshot, basePanel, list, hasReadyBasePanel)
     });
   },
 
-  buildFlowStatus(snapshot, basePanel, list) {
+  buildFlowStatus(snapshot, basePanel, list, hasReadyBasePanel) {
     const hasSession = !!(snapshot && snapshot.currentAxis && snapshot.currentAxis.axisName);
-    const hasBasePanel = !!(basePanel && Object.keys(basePanel).length > 0);
+    const hasStoredBasePanel = !!(basePanel && Object.keys(basePanel).length > 0);
+    const hasBasePanel = !!hasReadyBasePanel;
     const filledSlotCount = new Set((list || []).map(eq => eq.slot).filter(Boolean)).size;
     const hasFullSlots = filledSlotCount >= SLOTS.length;
     const schoolName = snapshot?.currentSchool?.schoolName || '';
@@ -1302,7 +1315,9 @@ confirmAddAffix() {
       hasBasePanel,
       hasFullSlots,
       sessionText: hasSession ? `已计算：${schoolName} / ${axisName}` : '未完成面板计算',
-      basePanelText: hasBasePanel ? '已校准基础面板' : '未校准基础面板',
+      basePanelText: hasBasePanel
+        ? '已校准基础面板'
+        : (hasStoredBasePanel ? '基础面板需重新校准' : '未校准基础面板'),
       slotText: hasFullSlots ? '8 个部位均有候选' : `已有 ${filledSlotCount}/${SLOTS.length} 个部位候选`
     };
   },

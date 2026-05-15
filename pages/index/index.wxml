@@ -189,18 +189,42 @@
 
     <view wx:if="{{ui.showGrandPanel && currentGrandPanel}}">
       <view class="group-title">基础面板</view>
+      <view class="grand-panel-mode-switch" wx:if="{{grandPanelModeOptions.length > 1}}">
+        <view
+          wx:for="{{grandPanelModeOptions}}"
+          wx:key="mode"
+          class="grand-panel-mode-item {{item.active ? 'is-active' : ''}}"
+          data-mode="{{item.mode}}"
+          bindtap="handleGrandPanelModeChange"
+        >
+          {{item.label}}
+        </view>
+      </view>
       <view class="summary-list">
         <view class="summary-item">
           <text class="summary-label">流派名称</text>
-          <text class="summary-value">{{currentGrandPanel.schoolName || '—'}}</text>
+          <text class="summary-value">{{currentGrandPanelVariant.schoolName || currentGrandPanel.schoolName || '—'}}</text>
         </view>
-        <view class="summary-item">
-          <text class="summary-label">小外 —— 大外</text>
-          <text class="summary-value">{{currentGrandPanel.attackOuterMin}} —— {{currentGrandPanel.attackOuterMax}}</text>
+        <view class="gp-outer-attack-card" wx:if="{{grandPanelMode !== 'outerMin'}}">
+          <view class="gp-outer-attack-item">
+            <text class="gp-outer-attack-label">小外</text>
+            <text class="gp-outer-attack-value">{{currentGrandPanelVariant.attackOuterMin || '—'}}</text>
+          </view>
+          <view class="gp-outer-attack-divider"></view>
+          <view class="gp-outer-attack-item">
+            <text class="gp-outer-attack-label">大外</text>
+            <text class="gp-outer-attack-value">{{currentGrandPanelVariant.attackOuterMax || '—'}}</text>
+          </view>
+        </view>
+        <view class="gp-outer-attack-card gp-outer-attack-card-single" wx:else>
+          <view class="gp-outer-attack-item">
+            <text class="gp-outer-attack-label">固定外功</text>
+            <text class="gp-outer-attack-value">{{currentGrandPanelVariant.attackOuterMin || '—'}}</text>
+          </view>
         </view>
         <view class="summary-item">
           <text class="summary-label">外功穿透</text>
-          <text class="summary-value">{{currentGrandPanel.armorPenetration || '—'}}</text>
+          <text class="summary-value">{{currentGrandPanelVariant.armorPenetration || '—'}}</text>
         </view>
       </view>
 
@@ -211,15 +235,15 @@
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">最小鸣金</text>
-      <text class="gp-element-value">{{currentGrandPanel.mingjinMin || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.mingjinMin || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">最大鸣金</text>
-      <text class="gp-element-value">{{currentGrandPanel.mingjinMax || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.mingjinMax || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">鸣金穿透</text>
-      <text class="gp-element-value">{{currentGrandPanel.mingjinPenetration || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.mingjinPenetration || '—'}}</text>
     </view>
   </view>
 </view>
@@ -229,15 +253,15 @@
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">最小裂石</text>
-      <text class="gp-element-value">{{currentGrandPanel.lieshiMin || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.lieshiMin || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">最大裂石</text>
-      <text class="gp-element-value">{{currentGrandPanel.lieshiMax || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.lieshiMax || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">裂石穿透</text>
-      <text class="gp-element-value">{{currentGrandPanel.lieshiPenetration || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.lieshiPenetration || '—'}}</text>
     </view>
   </view>
 </view>
@@ -247,15 +271,15 @@
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">最小牵丝</text>
-      <text class="gp-element-value">{{currentGrandPanel.qiansiMin || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.qiansiMin || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">最大牵丝</text>
-      <text class="gp-element-value">{{currentGrandPanel.qiansiMax || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.qiansiMax || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">牵丝穿透</text>
-      <text class="gp-element-value">{{currentGrandPanel.qiansiPenetration || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.qiansiPenetration || '—'}}</text>
     </view>
   </view>
 </view>
@@ -265,15 +289,15 @@
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">最小破竹</text>
-      <text class="gp-element-value">{{currentGrandPanel.pozhuMin || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.pozhuMin || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">最大破竹</text>
-      <text class="gp-element-value">{{currentGrandPanel.pozhuMax || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.pozhuMax || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">破竹穿透</text>
-      <text class="gp-element-value">{{currentGrandPanel.pozhuPenetration || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.pozhuPenetration || '—'}}</text>
     </view>
   </view>
 </view>
@@ -283,25 +307,25 @@
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">精准率</text>
-      <text class="gp-element-value">{{currentGrandPanel.accuracyRate || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.accuracyRate || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">会心率</text>
-      <text class="gp-element-value">{{currentGrandPanel.criticalRate || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.criticalRate || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">会意率</text>
-      <text class="gp-element-value">{{currentGrandPanel.criticalDamageRate || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.criticalDamageRate || '—'}}</text>
     </view>
   </view>
   <view class="gp-element-row" style="margin-top: 16rpx;">
     <view class="gp-element-item">
       <text class="gp-element-label">直接会心率</text>
-      <text class="gp-element-value">{{currentGrandPanel.directCriticalRate || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.directCriticalRate || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">直接会意率</text>
-      <text class="gp-element-value">{{currentGrandPanel.directCriticalDamageRate || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.directCriticalDamageRate || '—'}}</text>
     </view>
     <view class="gp-element-item"></view>
   </view>
@@ -312,21 +336,21 @@
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">外功伤害</text>
-      <text class="gp-element-value">{{currentGrandPanel.damageBonusOuter || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.damageBonusOuter || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">属攻伤害</text>
-      <text class="gp-element-value">{{currentGrandPanel.damageBonusElement || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.damageBonusElement || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">会心伤害</text>
-      <text class="gp-element-value">{{currentGrandPanel.criticalBonus || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.criticalBonus || '—'}}</text>
     </view>
   </view>
   <view class="gp-element-row" style="margin-top: 16rpx;">
     <view class="gp-element-item">
       <text class="gp-element-label">会意伤害</text>
-      <text class="gp-element-value">{{currentGrandPanel.criticalDamageBonus || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.criticalDamageBonus || '—'}}</text>
     </view>
     <view class="gp-element-item"></view>
     <view class="gp-element-item"></view>
@@ -338,43 +362,43 @@
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">全部武学增效</text>
-      <text class="gp-element-value">{{currentGrandPanel.allMartialBonus || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.allMartialBonus || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">首领增伤</text>
-      <text class="gp-element-value">{{currentGrandPanel.bossBonus || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.bossBonus || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">单体控制增伤</text>
-      <text class="gp-element-value">{{currentGrandPanel.singleControlBonus || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.singleControlBonus || '—'}}</text>
     </view>
   </view>
   <view class="gp-element-row" style="margin-top: 16rpx;">
     <view class="gp-element-item">
       <text class="gp-element-label">单体爆发增伤</text>
-      <text class="gp-element-value">{{currentGrandPanel.singleBurstBonus || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.singleBurstBonus || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">群体伤害增伤</text>
-      <text class="gp-element-value">{{currentGrandPanel.groupDamageBonus || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.groupDamageBonus || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">群体异常增伤</text>
-      <text class="gp-element-value">{{currentGrandPanel.groupAbnormalBonus || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.groupAbnormalBonus || '—'}}</text>
     </view>
   </view>
 </view>
 
       <view class="gp-element-block">
-  <view class="gp-element-title">武器增效</view>
+  <view class="gp-element-title">武学增效</view>
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">增效1</text>
-      <text class="gp-element-value">{{currentGrandPanel.weaponBoost1 || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.martialBoost1 || currentGrandPanelVariant.weaponBoost1 || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">增效2</text>
-      <text class="gp-element-value">{{currentGrandPanel.weaponBoost2 || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.martialBoost2 || currentGrandPanelVariant.weaponBoost2 || '—'}}</text>
     </view>
     <view class="gp-element-item"></view>
   </view>
@@ -385,15 +409,15 @@
   <view class="gp-element-row">
     <view class="gp-element-item">
       <text class="gp-element-label">定音1</text>
-      <text class="gp-element-value">{{currentGrandPanel.noteValue1 || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.noteValue1 || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">定音2</text>
-      <text class="gp-element-value">{{currentGrandPanel.noteValue2 || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.noteValue2 || '—'}}</text>
     </view>
     <view class="gp-element-item">
       <text class="gp-element-label">定音3</text>
-      <text class="gp-element-value">{{currentGrandPanel.noteValue3 || '—'}}</text>
+      <text class="gp-element-value">{{currentGrandPanelVariant.noteValue3 || '—'}}</text>
     </view>
   </view>
 </view>

@@ -230,7 +230,8 @@ function createCalculator(ctx) {
       .filter(name => name && name !== 'N/A' && name !== '')
 
     activeBonusNames.forEach(bonusName => {
-      const bonusDef = bonusMap[bonusName]
+      const resolvedBonusName = bonusName === '低真气追击天赋' ? '玉低真气追击天赋' : bonusName
+      const bonusDef = bonusMap[resolvedBonusName]
       if (!bonusDef) return
 
       if (bonusDef.condition && bonusDef.condition !== '') {
@@ -312,6 +313,8 @@ function createCalculator(ctx) {
 
     const mainElement      = elements[mainElementKey]
     const mainElementAttack = getValueByMode(mainElement.min, mainElement.max, mode)
+    const effectiveHiddenMainElementAttack =
+      String((skill || {}).type1 || '').trim() === '武器' ? hiddenMainElementAttack : 0
 
     const boostedPhysicalAttack = cleanNumber(finalPhysicalAttack * (1 + setExtraPhysicalBonus));
     const physicalPart = cleanNumber(
@@ -324,7 +327,7 @@ function createCalculator(ctx) {
       mainElementKey === 'pozhu' && lowEnergy === 1 ? setLowEnergyPozhuDamage : 0
 
       const mainElementPart = cleanNumber(
-        ((mainElementAttack + hiddenMainElementAttack) * elementRate + elementFixed) *
+        ((mainElementAttack + effectiveHiddenMainElementAttack) * elementRate + elementFixed) *
         (1 + elementBonus + pozhuLowEnergyBonus) *
         (1 + mainElement.pen / 200)
       );
@@ -506,7 +509,8 @@ function createCalculator(ctx) {
     const noteBonus  = cleanNumber(matchedNoteValue);
     const correction = cleanNumber(toNumber(currentSkill.correction) || 1);
 
-    const precisionRate = clamp(toPercent(form.precisionRate), 0, 1)
+    const isTiangongSkill = String(currentSkill.type1 || '').trim() === '天工'
+    const precisionRate = isTiangongSkill ? 1 : clamp(toPercent(form.precisionRate), 0, 1)
 
     const normalInsightRateInput = cleanNumber(
       clamp(toPercent(form.insightRate), 0, 1) +
@@ -580,14 +584,17 @@ function createCalculator(ctx) {
         physicalRate, physicalFixed, physicalPenetration, physicalBonus,
         extraPhysicalDamageBonus: sumNumbers([
           stepBonus.extraPhysicalDamageBonus,
-          stepBonus.extraPhysicalBonus,
           extraPhysicalBonus_回旋伞,
         ]),
         elementRate, elementFixed, elementBonus,
         totalDamageIncrease,
         noteBonus, correction,
         elements, mainElementKey, hiddenMainElementAttack,
-        setExtraPhysicalBonus, setLowEnergyPozhuDamage,
+        setExtraPhysicalBonus: sumNumbers([
+          setExtraPhysicalBonus,
+          stepBonus.extraPhysicalBonus,
+        ]),
+        setLowEnergyPozhuDamage,
         lowEnergy: cleanNumber(toNumber(extraOptions.lowEnergy)),
         skill:        currentSkill,
         selectedFood: ctx.selectedFood,
@@ -738,10 +745,10 @@ function createCalculator(ctx) {
       return true
     })
 
-    // 气涌轴 + 千山法：将次数为 0 的"90无名剑蓄力多道剑气"强制视为 1
+    // 气涌轴 + 千山法：将次数为 0 的"95无名剑蓄力多道剑气"强制视为 1
     if ((currentAxis.axisName || '').includes('气涌轴') && hasQianshanfa) {
       const overriddenSteps = filteredSteps.map(step => {
-        if (step.skillName === '90无名剑蓄力多道剑气' && toNumber(step.count) === 0) {
+        if (step.skillName === '95无名剑蓄力多道剑气' && toNumber(step.count) === 0) {
           return Object.assign({}, step, { count: 1 })
         }
         return step
@@ -790,8 +797,8 @@ function createCalculator(ctx) {
         step,
       }, formOverride)
 
-      // 鼠鼠窗口累积
-      if (step.skillName === '90鼠鼠泥鱼') {
+      // 鼠鼠窗口累积，结算行按上一次结算后的鼠鼠伤害 30% 计算。
+      if (String(skill.special || '').trim() === '鼠鼠' || /鼠鼠泥鱼/.test(step.skillName || '')) {
         shushuAccumulator = cleanNumber(shushuAccumulator + result.expectedDamage * count);
       }
 

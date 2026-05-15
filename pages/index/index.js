@@ -30,6 +30,16 @@ const MANUAL_SAVE_KEY = 'manualSavedConfigs'
 const WXACODE_IMAGE_PATH = '/images/wxacode.jpg'
 
 const AUTO_SAVE_LIMIT = 3
+const GRAND_PANEL_MODE_LABELS = {
+  outerMax: '大外流',
+  outerMin: '小外流'
+}
+
+function getPanelMartialBoostValue(panel, index) {
+  if (!panel) return ''
+  if (index === 1) return panel.martialBoost1 ?? panel.weaponBoost1 ?? ''
+  return panel.martialBoost2 ?? panel.weaponBoost2 ?? ''
+}
 
 const defaultTargetName  = '91幽牙蛇影'
 const targetFoundIndex   = targets.findIndex(item => item.targetName === defaultTargetName)
@@ -64,6 +74,9 @@ Page({
     grandPanelList,
     grandPanelMap,
     currentGrandPanel: null,
+    currentGrandPanelVariant: null,
+    grandPanelMode: 'outerMax',
+    grandPanelModeOptions: [],
 
     selectedMentalities: [],
     setList,
@@ -241,6 +254,67 @@ Page({
     return this.data.grandPanelMap[schoolName] || null
   },
 
+  getAvailableGrandPanelModes(panel) {
+    if (!panel) return []
+    if (Array.isArray(panel.panelModes) && panel.panelModes.length) {
+      return panel.panelModes.filter(mode => panel.panelVariants && panel.panelVariants[mode])
+    }
+    if (panel.panelVariants) {
+      return ['outerMax', 'outerMin'].filter(mode => panel.panelVariants[mode])
+    }
+    return ['outerMax']
+  },
+
+  getGrandPanelVariant(panel, mode) {
+    if (!panel) return null
+    const variants = panel.panelVariants || null
+    if (variants && variants[mode]) return variants[mode]
+
+    const modes = this.getAvailableGrandPanelModes(panel)
+    const fallbackMode = modes.includes(panel.defaultPanelMode) ? panel.defaultPanelMode : modes[0]
+    if (variants && fallbackMode && variants[fallbackMode]) return variants[fallbackMode]
+    return panel
+  },
+
+  getDefaultGrandPanelMode(panel) {
+    const modes = this.getAvailableGrandPanelModes(panel)
+    if (!modes.length) return 'outerMax'
+    if (modes.includes(panel && panel.defaultPanelMode)) return panel.defaultPanelMode
+    if (modes.includes('outerMax')) return 'outerMax'
+    return modes[0]
+  },
+
+  buildGrandPanelModeOptions(panel, activeMode) {
+    const modes = this.getAvailableGrandPanelModes(panel)
+    return modes.map(mode => ({
+      mode,
+      label: GRAND_PANEL_MODE_LABELS[mode] || mode,
+      active: mode === activeMode
+    }))
+  },
+
+  buildGrandPanelState(panel, preferredMode) {
+    if (!panel) {
+      return {
+        currentGrandPanel: null,
+        currentGrandPanelVariant: null,
+        grandPanelMode: 'outerMax',
+        grandPanelModeOptions: []
+      }
+    }
+
+    const modes = this.getAvailableGrandPanelModes(panel)
+    const mode = modes.includes(preferredMode) ? preferredMode : this.getDefaultGrandPanelMode(panel)
+    const variant = this.getGrandPanelVariant(panel, mode)
+
+    return {
+      currentGrandPanel: panel,
+      currentGrandPanelVariant: variant,
+      grandPanelMode: mode,
+      grandPanelModeOptions: this.buildGrandPanelModeOptions(panel, mode)
+    }
+  },
+
   // ─────────────────────────────────────────────
   // UI 切换
   // ─────────────────────────────────────────────
@@ -310,6 +384,7 @@ Page({
       setList,
       setOptions: ['无', ...setList.map(item => item.name)],
       setIndex: setList.findIndex(item => item.name === '飞隼') + 1,
+      ...this.buildGrandPanelState(grandPanelMap[(schools[defaultSchoolIndex] || {}).schoolName] || null)
     })
   },
 
@@ -355,7 +430,7 @@ Page({
       selectedFood:         '√',
       setIndex:             setList.findIndex(item => item.name === '飞隼') + 1,
       mentalityDisplayList: [],
-      currentGrandPanel:    this.data.grandPanelMap[currentSchool.schoolName] || null,
+      ...this.buildGrandPanelState(this.data.grandPanelMap[currentSchool.schoolName] || null),
       savedConfigs,
       manualSavedConfigs,
     }, () => {
@@ -422,7 +497,7 @@ Page({
     this.setData({
       schoolIndex:          index,
       currentSchoolAxesText: this.getAxesText(currentSchool),
-      currentGrandPanel:    this.data.grandPanelMap[currentSchool.schoolName] || null,
+      ...this.buildGrandPanelState(this.data.grandPanelMap[currentSchool.schoolName] || null),
       currentAxisList:      [],
       axisIndex:            0,
       currentAxis:          null,
@@ -552,7 +627,17 @@ Page({
       wx.showToast({ title: '当前流派暂无毕业面板数据', icon: 'none' })
       return
     }
-    this.setData({ currentGrandPanel, 'ui.showGrandPanel': true })
+    this.setData({
+      ...this.buildGrandPanelState(currentGrandPanel, this.data.grandPanelMode),
+      'ui.showGrandPanel': true
+    })
+  },
+
+  handleGrandPanelModeChange(e) {
+    const mode = e.currentTarget.dataset.mode
+    const panel = this.data.currentGrandPanel || this.getCurrentGrandPanelBySchool()
+    if (!panel || !this.getAvailableGrandPanelModes(panel).includes(mode)) return
+    this.setData(this.buildGrandPanelState(panel, mode))
   },
 
   handleApplyGrandPanel() {
@@ -561,45 +646,49 @@ Page({
       wx.showToast({ title: '当前流派暂无毕业面板数据', icon: 'none' })
       return
     }
+    const mode = this.data.grandPanelMode
+    const variant = this.getGrandPanelVariant(panel, mode) || panel
     this.batchUpdateForm({
-      physicalMinAttack:   String(panel.attackOuterMin            ?? ''),
-      physicalMaxAttack:   String(panel.attackOuterMax            ?? ''),
-      physicalPenetration: String(panel.armorPenetration          ?? ''),
-      physicalBonus:       String(panel.damageBonusOuter          ?? ''),
-      mingjinMin:          String(panel.mingjinMin                ?? ''),
-      mingjinMax:          String(panel.mingjinMax                ?? ''),
-      mingjinPen:          String(panel.mingjinPenetration        ?? ''),
-      lieshiMin:           String(panel.lieshiMin                 ?? ''),
-      lieshiMax:           String(panel.lieshiMax                 ?? ''),
-      lieshiPen:           String(panel.lieshiPenetration         ?? ''),
-      qiansiMin:           String(panel.qiansiMin                 ?? ''),
-      qiansiMax:           String(panel.qiansiMax                 ?? ''),
-      qiansiPen:           String(panel.qiansiPenetration         ?? ''),
-      pozhuMin:            String(panel.pozhuMin                  ?? ''),
-      pozhuMax:            String(panel.pozhuMax                  ?? ''),
-      pozhuPen:            String(panel.pozhuPenetration          ?? ''),
-      elementBonus:        String(panel.damageBonusElement        ?? ''),
-      precisionRate:       String(panel.accuracyRate              ?? ''),
-      insightRate:         String(panel.criticalRate              ?? ''),
-      perfectRate:         String(panel.criticalDamageRate        ?? ''),
-      directInsightRate:   String(panel.directCriticalRate        ?? ''),
-      directPerfectRate:   String(panel.directCriticalDamageRate  ?? ''),
-      insightDamageBonus:  String(panel.criticalBonus             ?? ''),
-      perfectDamageBonus:  String(panel.criticalDamageBonus       ?? ''),
-      allMartialBonus:     String(panel.allMartialBonus           ?? ''),
-      bossBonus:           String(panel.bossBonus                 ?? ''),
-      singleControlBonus:  String(panel.singleControlBonus        ?? ''),
-      singleBurstBonus:    String(panel.singleBurstBonus          ?? ''),
-      groupDamageBonus:    String(panel.groupDamageBonus          ?? ''),
-      groupAbnormalBonus:  String(panel.groupAbnormalBonus        ?? ''),
-      martialBoostValue1:  String(panel.weaponBoost1              ?? ''),
-      martialBoostValue2:  String(panel.weaponBoost2              ?? ''),
-      noteValue1:          String(panel.noteValue1                ?? ''),
-      noteValue2:          String(panel.noteValue2                ?? ''),
-      noteValue3:          String(panel.noteValue3                ?? ''),
+      physicalMinAttack:   String(variant.attackOuterMin            ?? ''),
+      physicalMaxAttack:   String(variant.attackOuterMax            ?? ''),
+      physicalPenetration: String(variant.armorPenetration          ?? ''),
+      physicalBonus:       String(variant.damageBonusOuter          ?? ''),
+      mingjinMin:          String(variant.mingjinMin                ?? ''),
+      mingjinMax:          String(variant.mingjinMax                ?? ''),
+      mingjinPen:          String(variant.mingjinPenetration        ?? ''),
+      lieshiMin:           String(variant.lieshiMin                 ?? ''),
+      lieshiMax:           String(variant.lieshiMax                 ?? ''),
+      lieshiPen:           String(variant.lieshiPenetration         ?? ''),
+      qiansiMin:           String(variant.qiansiMin                 ?? ''),
+      qiansiMax:           String(variant.qiansiMax                 ?? ''),
+      qiansiPen:           String(variant.qiansiPenetration         ?? ''),
+      pozhuMin:            String(variant.pozhuMin                  ?? ''),
+      pozhuMax:            String(variant.pozhuMax                  ?? ''),
+      pozhuPen:            String(variant.pozhuPenetration          ?? ''),
+      elementBonus:        String(variant.damageBonusElement        ?? ''),
+      precisionRate:       String(variant.accuracyRate              ?? ''),
+      insightRate:         String(variant.criticalRate              ?? ''),
+      perfectRate:         String(variant.criticalDamageRate        ?? ''),
+      directInsightRate:   String(variant.directCriticalRate        ?? ''),
+      directPerfectRate:   String(variant.directCriticalDamageRate  ?? ''),
+      insightDamageBonus:  String(variant.criticalBonus             ?? ''),
+      perfectDamageBonus:  String(variant.criticalDamageBonus       ?? ''),
+      allMartialBonus:     String(variant.allMartialBonus           ?? ''),
+      bossBonus:           String(variant.bossBonus                 ?? ''),
+      singleControlBonus:  String(variant.singleControlBonus        ?? ''),
+      singleBurstBonus:    String(variant.singleBurstBonus          ?? ''),
+      groupDamageBonus:    String(variant.groupDamageBonus          ?? ''),
+      groupAbnormalBonus:  String(variant.groupAbnormalBonus        ?? ''),
+      martialBoostValue1:  String(getPanelMartialBoostValue(variant, 1)),
+      martialBoostValue2:  String(getPanelMartialBoostValue(variant, 2)),
+      noteValue1:          String(variant.noteValue1                ?? ''),
+      noteValue2:          String(variant.noteValue2                ?? ''),
+      noteValue3:          String(variant.noteValue3                ?? ''),
     })
-    this.setData({ currentGrandPanel: panel, 'ui.showGrandPanel': true })
-    wx.nextTick(() => { wx.showToast({ title: '已自动填入毕业面板', icon: 'success' }) })
+    this.setData({ ...this.buildGrandPanelState(panel, mode), 'ui.showGrandPanel': true })
+    wx.nextTick(() => {
+      wx.showToast({ title: `已填入${GRAND_PANEL_MODE_LABELS[mode] || ''}毕业面板`, icon: 'success' })
+    })
   },
 
   // ─────────────────────────────────────────────
@@ -1132,7 +1221,7 @@ Page({
     this.setData({
       schoolIndex,
       currentSchoolAxesText: this.getAxesText(currentSchool),
-      currentGrandPanel: this.data.grandPanelMap[currentSchool.schoolName] || null,
+      ...this.buildGrandPanelState(this.data.grandPanelMap[currentSchool.schoolName] || null),
       skillIndex: config.skillIndex || 0,
       currentSkill: this.data.skills[config.skillIndex || 0] || {},
       targetIndex: config.targetIndex || 0,
@@ -1533,7 +1622,7 @@ Page({
     this.setData({
       schoolIndex:           defaultSchoolIndex,
       currentSchoolAxesText: this.getAxesText(defaultSchool),
-      currentGrandPanel:     this.data.grandPanelMap[defaultSchool.schoolName] || null,
+      ...this.buildGrandPanelState(this.data.grandPanelMap[defaultSchool.schoolName] || null),
       skillIndex:            defaultSkillIndex,
       currentSkill:          this.data.skills[defaultSkillIndex] || {},
       targetIndex,

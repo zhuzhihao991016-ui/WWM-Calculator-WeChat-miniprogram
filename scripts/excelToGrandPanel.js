@@ -8,6 +8,7 @@ const OUTPUT_FILE = path.resolve(__dirname, '../data/GrandPanel.js')
 
 const HEADERS = [
   '流派名称',
+  '面板类型',
   '小外',
   '大外',
   '外功穿透',
@@ -38,12 +39,21 @@ const HEADERS = [
   '单体爆发增伤',
   '群体伤害增伤',
   '群体异常增伤',
-  '武器增效1',
-  '武器增效2',
+  '武学增效1',
+  '武学增效2',
   '定音1',
   '定音2',
   '定音3'
 ]
+
+const PANEL_MODE_MAP = {
+  '大外流': 'outerMax',
+  '小外流': 'outerMin',
+  outerMax: 'outerMax',
+  outerMin: 'outerMin'
+}
+
+const DEFAULT_PANEL_MODE = 'outerMax'
 
 function normalizeHeader(value) {
   return String(value || '').trim()
@@ -145,13 +155,67 @@ function convertRowToPanelItem(row) {
     groupDamageBonus: row['群体伤害增伤'],
     groupAbnormalBonus: row['群体异常增伤'],
 
-    weaponBoost1: row['武器增效1'],
-    weaponBoost2: row['武器增效2'],
+    martialBoost1: row['武学增效1'],
+    martialBoost2: row['武学增效2'],
 
     noteValue1: row['定音1'],
     noteValue2: row['定音2'],
     noteValue3: row['定音3']
   }
+}
+
+function getPanelMode(row) {
+  const rawMode = normalizeCell(row['面板类型'])
+  const panelMode = PANEL_MODE_MAP[rawMode]
+  if (!panelMode) {
+    throw new Error(`毕业面板存在未知面板类型：${rawMode || '空'}（仅支持 大外流 / 小外流）`)
+  }
+  return panelMode
+}
+
+function getDefaultPanelMode(panelVariants) {
+  if (panelVariants[DEFAULT_PANEL_MODE]) return DEFAULT_PANEL_MODE
+  if (panelVariants.outerMin) return 'outerMin'
+  return DEFAULT_PANEL_MODE
+}
+
+function groupRowsToPanelList(rows) {
+  const grouped = {}
+  const order = []
+
+  rows.forEach(row => {
+    const schoolName = row['流派名称'] || ''
+    const panelMode = getPanelMode(row)
+
+    if (!grouped[schoolName]) {
+      grouped[schoolName] = {
+        schoolName,
+        panelVariants: {},
+      }
+      order.push(schoolName)
+    }
+
+    if (grouped[schoolName].panelVariants[panelMode]) {
+      throw new Error(`毕业面板存在重复数据：${schoolName} / ${row['面板类型']}`)
+    }
+
+    grouped[schoolName].panelVariants[panelMode] = convertRowToPanelItem(row)
+  })
+
+  return order.map(schoolName => {
+    const item = grouped[schoolName]
+    const panelModes = ['outerMax', 'outerMin'].filter(mode => item.panelVariants[mode])
+    const defaultPanelMode = getDefaultPanelMode(item.panelVariants)
+    const defaultPanel = item.panelVariants[defaultPanelMode] || item.panelVariants[panelModes[0]] || {}
+
+    return {
+      ...defaultPanel,
+      schoolName,
+      defaultPanelMode,
+      panelModes,
+      panelVariants: item.panelVariants
+    }
+  })
 }
 
 function buildOutputContent(list) {
@@ -186,7 +250,7 @@ function main() {
 
   const workbook = XLSX.readFile(INPUT_FILE)
   const rows = parseSheetRows(workbook, SHEET_NAME)
-  const panelList = rows.map(convertRowToPanelItem)
+  const panelList = groupRowsToPanelList(rows)
   const content = buildOutputContent(panelList)
 
   ensureDir(OUTPUT_FILE)

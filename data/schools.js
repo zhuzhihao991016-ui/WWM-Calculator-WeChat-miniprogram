@@ -2,7 +2,7 @@ module.exports = [
   {
     "schoolName": "鸣金虹",
     "mainElement": "鸣金",
-    "hiddenMainElementAttack": 54.8,
+    "hiddenMainElementAttack": 51.5,
     "notes": [
       "剑蓄力增伤",
       "N/A",
@@ -27,7 +27,7 @@ module.exports = [
   {
     "schoolName": "鸣金影",
     "mainElement": "鸣金",
-    "hiddenMainElementAttack": 54.8,
+    "hiddenMainElementAttack": 51.5,
     "notes": [
       "流血增伤",
       "N/A",
@@ -43,8 +43,7 @@ module.exports = [
       "所恨年年"
     ],
     "axes": [
-      "6血爆骑龙轴",
-      "4血爆骑龙轴"
+      "6血爆骑龙轴"
     ],
     "martialBoost1Name": "剑武学增伤",
     "martialBoost2Name": "枪武学增伤",
@@ -54,7 +53,7 @@ module.exports = [
   {
     "schoolName": "牵丝玉",
     "mainElement": "牵丝",
-    "hiddenMainElementAttack": 54.8,
+    "hiddenMainElementAttack": 51.5,
     "notes": [
       "伞特殊增伤",
       "伞武学增伤",
@@ -71,8 +70,7 @@ module.exports = [
       "极乐泣血"
     ],
     "axes": [
-      "6花火拳轴",
-      "5花龙蛤轴"
+      "6花火拳轴"
     ],
     "martialBoost1Name": "伞武学增伤",
     "martialBoost2Name": "扇武学增伤",
@@ -82,7 +80,7 @@ module.exports = [
   {
     "schoolName": "裂石威",
     "mainElement": "裂石",
-    "hiddenMainElementAttack": 0,
+    "hiddenMainElementAttack": 51.5,
     "notes": [
       "陌刀蓄力增伤",
       "N/A",
@@ -109,7 +107,7 @@ module.exports = [
   {
     "schoolName": "裂石均",
     "mainElement": "裂石",
-    "hiddenMainElementAttack": 54.8,
+    "hiddenMainElementAttack": 51.5,
     "notes": [
       "横刀派生技增伤",
       "陌刀蓄力技增伤",
@@ -138,7 +136,7 @@ module.exports = [
   {
     "schoolName": "破竹风",
     "mainElement": "破竹",
-    "hiddenMainElementAttack": 54.8,
+    "hiddenMainElementAttack": 51.5,
     "notes": [
       "鼠鼠增伤",
       "强效轻击增伤",
@@ -164,7 +162,7 @@ module.exports = [
   {
     "schoolName": "破竹尘",
     "mainElement": "破竹",
-    "hiddenMainElementAttack": 54.8,
+    "hiddenMainElementAttack": 51.5,
     "notes": [
       "伞武学增伤",
       "N/A",

@@ -70,13 +70,73 @@ function buildMap(list, key) {
   }, {})
 }
 
+function normalizeGrandPanelItem(panel) {
+  if (!panel || !panel.schoolName) return panel
+
+  const panelVariants = panel.panelVariants && typeof panel.panelVariants === 'object'
+    ? panel.panelVariants
+    : {}
+  const panelModes = Array.isArray(panel.panelModes) ? panel.panelModes.filter(mode => panelVariants[mode]) : []
+
+  if (!panelModes.length) {
+    const { panelModes: unusedPanelModes, panelVariants: unusedPanelVariants, ...legacyPanel } = panel
+    return {
+      ...panel,
+      defaultPanelMode: panel.defaultPanelMode || 'outerMax',
+      panelModes: ['outerMax'],
+      panelVariants: {
+        outerMax: legacyPanel
+      }
+    }
+  }
+
+  const defaultPanelMode = panelModes.includes(panel.defaultPanelMode)
+    ? panel.defaultPanelMode
+    : (panelModes.includes('outerMax') ? 'outerMax' : panelModes[0])
+  const defaultPanel = panelVariants[defaultPanelMode] || {}
+
+  return {
+    ...panel,
+    ...defaultPanel,
+    defaultPanelMode,
+    panelModes,
+    panelVariants
+  }
+}
+
+function normalizeGrandPanelBoostFields(panel) {
+  if (!panel) return panel
+
+  const normalized = { ...panel }
+  if (normalized.martialBoost1 === undefined && normalized.weaponBoost1 !== undefined) {
+    normalized.martialBoost1 = normalized.weaponBoost1
+  }
+  if (normalized.martialBoost2 === undefined && normalized.weaponBoost2 !== undefined) {
+    normalized.martialBoost2 = normalized.weaponBoost2
+  }
+
+  if (normalized.panelVariants && typeof normalized.panelVariants === 'object') {
+    normalized.panelVariants = Object.keys(normalized.panelVariants).reduce((variants, mode) => {
+      variants[mode] = normalizeGrandPanelBoostFields(normalized.panelVariants[mode])
+      return variants
+    }, {})
+  }
+
+  return normalized
+}
+
+function normalizeGrandPanelList(list) {
+  return (list || []).map(item => normalizeGrandPanelItem(normalizeGrandPanelBoostFields(item))).filter(Boolean)
+}
+
 function normalizeGameData(raw) {
   const source = raw || {}
+  const normalizedGrandPanelList = normalizeGrandPanelList(source.grandPanelList || grandPanelList)
   const normalized = {
     targets: source.targets || targets,
     schools: source.schools || schools,
     skills: source.skills || skills,
-    grandPanelList: source.grandPanelList || grandPanelList,
+    grandPanelList: normalizedGrandPanelList,
     axesList: source.axesList || axesList,
     setList: source.setList || setList,
     bonusList: source.bonusList || bonusList,
@@ -84,7 +144,7 @@ function normalizeGameData(raw) {
     equipmentAffixList: source.equipmentAffixList || equipmentAffixList,
   }
 
-  normalized.grandPanelMap = source.grandPanelMap || buildMap(normalized.grandPanelList, 'schoolName')
+  normalized.grandPanelMap = buildMap(normalized.grandPanelList, 'schoolName')
   normalized.axesMap = source.axesMap || buildAxesMap(normalized.axesList)
   normalized.axisNameMap = source.axisNameMap || buildMap(normalized.axesList, 'axisName')
   normalized.setMap = source.setMap || buildMap(normalized.setList, 'name')
